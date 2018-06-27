@@ -1,0 +1,460 @@
+swagger: '2.0'
+info:
+  description: This document describes a subset of UniConnect Transact&trade; Open Banking API collection. These APIs are implemented in REST-like conventions, uses HTTP/1.1 and JSON messages. 
+  version: 1.0.0
+  title: UniConnect Transact™ API
+  contact:
+    email: api-support@uniconnect.io
+host: transact.uniconnect.io
+basePath: /
+schemes:
+  - http
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+paths: 
+  /security/authentication/access-token:
+    post:
+      tags:
+        - Security
+      summary: Validates User's credentials, creates new server-side session and returns an Access-Token containing sessionid 
+      description: This operation works similar to [OAuth2's Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3) flow. 
+      operationId: authenticateUser
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Username and Password required
+          required: true
+          schema:
+            $ref: '#/definitions/Credentials'
+      responses:
+        '201':
+          description: Successfully logged in.
+          schema:
+            $ref: '#/definitions/AuthToken'
+        '401':
+          description: Invalid credentials.
+  /customermgmt/welcome/profile:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Customer Management
+      summary: Gets User's basic profile data, such as name, dob and last login time
+      description: ''
+      operationId: welcomeProfile
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: query
+          type: string
+      responses:
+        '200':
+          description: Profile received successfully.
+          schema:
+            $ref: '#/definitions/Profile'
+        '401':
+          description: Not Authorized
+        '404':
+          description: User profile not found
+  /customermgmt/welcome/message:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Customer Management
+      summary: Gets list of welcome messages and notices, such as new feature announcement or system maintenance notice
+      description: ''
+      operationId: messages
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Messages Retrieved successfully
+          schema:
+            $ref: '#/definitions/MessagesResponse'
+        '401':
+          description: Not Authorized
+  /customermgmt/profile/profile:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Customer Management
+      summary: Gets User's full profile data, which includes biographics, demographics and contact details
+      description: ''
+      operationId: profile
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: query
+          type: string
+      responses:
+        '200':
+          description: Profile received successfully.
+          schema:
+            $ref: '#/definitions/UserProfile'
+        '401':
+          description: Not Authorized
+        '404':
+          description: User profile not found
+  /accountmgmt/retail/accounts:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Account Management
+      summary: Gets list of retail bank accounts linked to User's login profile 
+      description: ''
+      operationId: accounts
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Account List retrieved successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/AccountList'
+        '401':
+          description: Not Authorized
+  '/accountmgmt/retail/accounts/{id}':
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Account Management
+      summary: Gets account details and balances for a given account
+      description: ''
+      operationId: singleAccount
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Account details retrieved successfully
+          schema:
+            $ref: '#/definitions/AccountDetail'
+        '401':
+          description: Not Authorized
+  '/accountmgmt/retail/accounts/{id}/transactions':
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Account Management
+      summary: Gets transactions history for a given account
+      description: ''
+      operationId: transactions
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+        - name: fromDate
+          in: query
+          type: string
+          format: date
+        - name: toDate
+          in: query
+          type: string
+          format: date
+      responses:
+        '200':
+          description: Transaction details retrieved successfully
+          schema:
+            items:
+              $ref: '#/definitions/Transactions'
+        '401':
+          description: Not Authorized
+definitions:
+  Credentials:
+    type: object
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      strategy:
+        type: string
+      businessId:
+        type: string
+  AuthToken:
+    type: object
+    properties:
+      authToken:
+        type: string
+  UserProfile:
+    type: object
+    properties:
+      customerType:
+        type: string
+      customerSegment:
+        type: string
+      customerParticulars:
+        properties:
+          firstName:
+            type: string
+          lastName:
+            type: string
+          gender:
+            type: string
+          prefix:
+            type: string
+          suffix:
+            type: string
+        type: object
+      demographics:
+        properties:
+          dob:
+            type: string
+            format: date-time
+          placeOfBirth:
+            type: string
+          countryOfBirth:
+            type: string
+          residencyCountryCode:
+            type: string
+          nationality:
+            type: string
+          maritalStatus:
+            type: string
+          residencyStatus:
+            type: string
+          residencyType:
+            type: string
+        type: object
+      addressList:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: number
+            line1:
+              type: string
+            line2:
+              type: string
+            line3:
+              type: string
+            line4:
+              type: string
+            type:
+              type: string
+            district:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            postalCode:
+              type: string
+            country:
+              type: string
+      emails:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: number
+            email:
+              type: string
+            preferred:
+              type: boolean
+            type:
+              type: string
+      phones:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: number
+            type:
+              type: string
+            number:
+              type: string
+            countryCode:
+              type: string
+            areaCode:
+              type: string
+            ext:
+              type: string
+      socialMedia:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: number
+            accountId:
+              type: string
+            preferred:
+              type: boolean
+      idDocs:
+        type: array
+        items:
+          type: object
+          properties:
+            type:
+              type: string
+            primary:
+              type: boolean
+            number:
+              type: string
+            expiry:
+              type: string
+              format: date-time
+            issuancePlace:
+              type: string
+            issuanceCountry:
+              type: string
+      education:
+        type: string
+      employment:
+        type: array
+        items:
+          type: object
+          properties:
+            employerName:
+              type: string
+            jobTitle:
+              type: string
+            occupationCode:
+              type: string
+            description:
+              type: string
+            industryCode:
+              type: string
+            duration:
+              type: string
+            email:
+              type: string
+      financialInfo:
+        type: array
+        items:
+          type: string
+  Profile:
+    type: object
+    properties:
+      name:
+        type: object
+        properties:
+          title:
+            type: string
+          firstName:
+            type: string
+          lastName:
+            type: string
+      lastLogin:
+        type: string
+        format: date-time
+      birthday:
+        type: string
+        format: date
+      gender:
+        type: string
+      customerType:
+        type: string
+  MessagesResponse:
+    type: array
+    items:
+      $ref: '#/definitions/Message'
+  Message:
+    properties:
+      title:
+        type: string
+      body:
+        type: string
+      messageType:
+        type: string
+      link:
+        type: string
+  AccountList:
+    $ref: '#/definitions/Account'
+  AccountDetail:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+      balance:
+        items:
+          $ref: '#/definitions/Balance'
+  Account:
+    type: object
+    properties:
+      accountNo:
+        type: string
+      currency:
+        type: string
+      workBalance:
+        type: string
+      accountType:
+        type: string
+      ledgerBalance:
+        type: string
+      clearedBalance:
+        type: string
+      lockBalance:
+        type: string
+      usableBalance:
+        type: string
+      accountId:
+        type: number
+  Balance:
+    type: object
+    properties:
+      balanceType:
+        type: string
+      amount:
+        type: number
+        format: double
+      currencyCode:
+        type: string
+  Transactions:
+    type: object
+    properties:
+      transactionDate:
+        type: string
+        format: date-time
+      description:
+        type: string
+      reference:
+        type: string
+      localCurrency:
+        type: string
+      debit:
+        type: string
+      credit:
+        type: string
