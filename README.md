@@ -12,20 +12,20 @@ UniConnect Transact™ APIs.
 
 ### Accounts Inquiry
 
-a) Start with calling `POST /security/authentication/access-token`, submitting a 
+1. Start with calling `POST /security/authentication/access-token`, submitting a 
 customer's username and password (we will soon support other OAuth2 grant types). 
 This operation returns an access token, which is used to get customer's data 
 through other APIs. 
-b) After receiving an access token, call `GET /customermgmt/welcome/profile` and 
+2. After receiving an access token, call `GET /customermgmt/welcome/profile` and 
 `GET /customermgmt/welcome/message` to fetch customer's basic profile and list 
 of welcome messages. 
-c) Next, call `GET /accountmgmt/retail/accounts` to get a list of all accounts 
+3. Next, call `GET /accountmgmt/retail/accounts` to get a list of all accounts 
 (with balances) that belong to the customer. 
-d) To get more detailed data for an account, including other balance types, you 
+4. To get more detailed data for an account, including other balance types, you 
 can call `GET /accountmgmt/retail/accounts/{id}`
-e) To get a history of recent transactions for an account, call 
+5. To get a history of recent transactions for an account, call 
 `GET /accountmgmt/retail/accounts/{id}/transactions` 
-f) Lastly, calling operation `GET /customermgmt/profile/profile` will return
+6. Lastly, calling operation `GET /customermgmt/profile/profile` will return
 customer's full profile, which includes biographics, demographics, contacts, and 
 other personal details. 
 
