@@ -5,10 +5,10 @@ info:
   title: UniConnect Transact™ API
   contact:
     email: api-support@uniconnect.io
-host: transact.uniconnect.io
+host: uniconnect-transact.azure-api.net
 basePath: /
 schemes:
-  - http
+  - https
 securityDefinitions:
   Bearer:
     type: apiKey
@@ -53,10 +53,6 @@ paths:
         - application/json
       produces:
         - application/json
-      parameters:
-        - name: id
-          in: query
-          type: string
       responses:
         '200':
           description: Profile received successfully.
@@ -66,7 +62,7 @@ paths:
           description: Not Authorized
         '404':
           description: User profile not found
-  /customermgmt/welcome/message:
+  /customermgmt/welcome/messages:
     get:
       security:
         - Bearer: []
@@ -99,10 +95,6 @@ paths:
         - application/json
       produces:
         - application/json
-      parameters:
-        - name: id
-          in: query
-          type: string
       responses:
         '200':
           description: Profile received successfully.
@@ -203,12 +195,14 @@ definitions:
         type: string
       strategy:
         type: string
-      businessId:
+      companyCode: 
+        type: string
+      bankId:
         type: string
   AuthToken:
     type: object
     properties:
-      authToken:
+      accessToken:
         type: string
   UserProfile:
     type: object
