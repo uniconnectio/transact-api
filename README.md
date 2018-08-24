@@ -17,7 +17,7 @@ customer's username and password (we will soon support other OAuth2 grant types)
 This operation returns an access token, which is used to get customer's data 
 through other APIs. 
 2. After receiving an access token, call `GET /customermgmt/welcome/profile` and 
-`GET /customermgmt/welcome/message` to fetch customer's basic profile and list 
+`GET /customermgmt/welcome/messages` to fetch customer's basic profile and list 
 of welcome messages. 
 3. Next, call `GET /accountmgmt/retail/accounts` to get a list of all accounts 
 (with balances) that belong to the customer. 
