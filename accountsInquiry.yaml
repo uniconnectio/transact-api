@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  description: This document describes a subset of UniConnect Transact&trade; Open Banking API collection. These APIs are implemented in REST-like conventions, uses HTTP/1.1 and JSON messages. 
+  description: This document describes a subset of UniConnect Transact&trade; Open Banking API collection. These APIs are implemented in REST-like conventions, uses HTTP/1.1 and JSON messages.
   version: 1.0.0
   title: UniConnect Transact™ API
   contact:
@@ -14,13 +14,13 @@ securityDefinitions:
     type: apiKey
     name: Authorization
     in: header
-paths: 
+paths:
   /security/authentication/access-token:
     post:
       tags:
         - Security
-      summary: Validates User's credentials, creates new server-side session and returns an Access-Token containing sessionid 
-      description: This operation works similar to [OAuth2's Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3) flow. 
+      summary: Validates User's credentials, creates new server-side session and returns an Access-Token containing sessionid
+      description: This operation works similar to [OAuth2's Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3) flow.
       operationId: authenticateUser
       consumes:
         - application/json
@@ -28,8 +28,8 @@ paths:
         - application/json
       parameters:
         - in: body
-          name: body
-          description: Username and Password required
+          name: Credentials
+          description: Email and Password required
           required: true
           schema:
             $ref: '#/definitions/Credentials'
@@ -104,13 +104,37 @@ paths:
           description: Not Authorized
         '404':
           description: User profile not found
+    patch:
+      security:
+        - Bearer: []
+      tags:
+        - Customer Management
+      summary: Updates User's primary address.
+      description: ''
+      operationId: profileUpdate
+      parameters:
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/ProfileUpdateRequest'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Address Updated successfully.
+          schema:
+            $ref: '#/definitions/ProfileUpdate'
+        '401':
+          description: Not Authorized
+        '404':
+          description: User profile not found
   /accountmgmt/retail/accounts:
     get:
       security:
         - Bearer: []
       tags:
         - Account Management
-      summary: Gets list of retail bank accounts linked to User's login profile 
+      summary: Gets list of retail bank accounts linked to User's login profile
       description: ''
       operationId: accounts
       consumes:
@@ -169,14 +193,39 @@ paths:
           in: path
           required: true
           type: string
+          description: Transaction details retrieved successfully
         - name: fromDate
           in: query
           type: string
+          description: Transaction histrory start date.
           format: date
         - name: toDate
           in: query
           type: string
+          description: Transaction histrory end date.
           format: date
+      responses:
+        '200':
+          description: Transaction details retrieved successfully
+          schema:
+            items:
+              $ref: '#/definitions/Transactions'
+        '401':
+          description: Not Authorized
+  '/fund-transfer':
+    post:
+      security:
+        - Bearer: []
+      tags:
+        - Account Management
+      summary: Transfer funds from one account to another
+      description: ''
+      operationId: fundTransfer
+      parameters:
+        - name: transaction
+          in: body
+          schema:
+            $ref: '#/definitions/FundTransfer'
       responses:
         '200':
           description: Transaction details retrieved successfully
@@ -188,30 +237,45 @@ paths:
 definitions:
   Credentials:
     type: object
+    required: 
+    - email
+    - password
+    - strategy
+    - bankId
     properties:
       email:
         type: string
+        description: Registered user email address.
       password:
         type: string
+        description: Password associated with registered user email.
       strategy:
         type: string
-      companyCode: 
-        type: string
+        description: TODO Strategy needs to be updated.
+        default: local
+        enum:
+        - local
+        - jwt
       bankId:
         type: string
+        description: Specific bank Id which is associated with the user.
   AuthToken:
     type: object
     properties:
       accessToken:
         type: string
+        description: Logged in user JWT token.
   UserProfile:
     type: object
     properties:
       customerType:
         type: string
+        description: Type of logged in customer.
       customerSegment:
         type: string
+        description: Customer belonging segment.
       customerParticulars:
+        description: This will contains basic personal information like firstName etc.
         properties:
           firstName:
             type: string
@@ -225,6 +289,7 @@ definitions:
             type: string
         type: object
       demographics:
+        description: Contains the customer demographic information.
         properties:
           dob:
             type: string
@@ -246,6 +311,7 @@ definitions:
         type: object
       addressList:
         type: array
+        description: Customer address related information.
         items:
           type: object
           properties:
@@ -273,6 +339,7 @@ definitions:
               type: string
       emails:
         type: array
+        description: Customer email related information.
         items:
           type: object
           properties:
@@ -286,6 +353,7 @@ definitions:
               type: string
       phones:
         type: array
+        description: Customer phone related information.
         items:
           type: object
           properties:
@@ -303,6 +371,7 @@ definitions:
               type: string
       socialMedia:
         type: array
+        description: Customer social media related information.
         items:
           type: object
           properties:
@@ -332,8 +401,10 @@ definitions:
               type: string
       education:
         type: string
+        description: Customer education related information.
       employment:
         type: array
+        description: Customer employment related information.
         items:
           type: object
           properties:
@@ -353,10 +424,12 @@ definitions:
               type: string
       financialInfo:
         type: array
+        description: Customer financial related information.
         items:
           type: string
   Profile:
     type: object
+    description: Customer profile related information.
     properties:
       name:
         type: object
@@ -377,6 +450,54 @@ definitions:
         type: string
       customerType:
         type: string
+  ProfileUpdate:
+    type: object
+    description: Customer address Update.
+    properties:
+      trnType:
+        type: string
+      trnState:
+        type: object
+        properties:
+          status:
+            type: string
+          txId:
+            type: string
+  ProfileUpdateRequest:
+    type: object
+    properties:
+      t24UserId:
+        type: string
+      finacleUserId:
+        type: string
+      profile:
+        type: object
+        properties:
+          addressList:
+            type: array
+            items:
+              type: object
+              properties:
+                line1:
+                  type: string
+                line2:
+                  type: string
+                line3:
+                  type: string
+                line4:
+                  type: string
+                type:
+                  type: string
+                district:
+                  type: string
+                city:
+                  type: string
+                state:
+                  type: string
+                postalCode:
+                  type: string
+                country:
+                  type: string
   MessagesResponse:
     type: array
     items:
@@ -428,6 +549,7 @@ definitions:
         type: number
   Balance:
     type: object
+    description: Customer balance related information.
     properties:
       balanceType:
         type: string
@@ -438,6 +560,7 @@ definitions:
         type: string
   Transactions:
     type: object
+    description: Customer transaction related information.
     properties:
       transactionDate:
         type: string
@@ -451,4 +574,18 @@ definitions:
       debit:
         type: string
       credit:
+        type: string
+  FundTransfer:
+    type: object
+    description: Fund Transfer related information.
+    required:
+      - accountId
+      - creditActId
+      - creditAmount
+    properties:
+      accountId:
+        type: string
+      creditActId:
+        type: string
+      creditAmount:
         type: string
