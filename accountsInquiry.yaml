@@ -37,7 +37,7 @@ paths:
         '201':
           description: Successfully logged in.
           schema:
-            $ref: '#/definitions/AuthToken'
+            $ref: '#/definitions/AccessToken'
         '401':
           description: Invalid credentials.
   /customermgmt/welcome/profile:
@@ -48,7 +48,7 @@ paths:
         - Customer Management
       summary: Gets User's basic profile data, such as name, dob and last login time
       description: ''
-      operationId: welcomeProfile
+      operationId: getWelcomeProfile
       consumes:
         - application/json
       produces:
@@ -57,7 +57,7 @@ paths:
         '200':
           description: Profile received successfully.
           schema:
-            $ref: '#/definitions/Profile'
+            $ref: '#/definitions/WelcomeProfile'
         '401':
           description: Not Authorized
         '404':
@@ -70,7 +70,7 @@ paths:
         - Customer Management
       summary: Gets list of welcome messages and notices, such as new feature announcement or system maintenance notice
       description: ''
-      operationId: messages
+      operationId: getWelcomeMessageList
       consumes:
         - application/json
       produces:
@@ -79,7 +79,9 @@ paths:
         '200':
           description: Messages Retrieved successfully
           schema:
-            $ref: '#/definitions/MessagesResponse'
+            type: array
+            items:
+              $ref: '#/definitions/WelcomeMessage'
         '401':
           description: Not Authorized
   /customermgmt/profile/profile:
@@ -90,7 +92,7 @@ paths:
         - Customer Management
       summary: Gets User's full profile data, which includes biographics, demographics and contact details
       description: ''
-      operationId: profile
+      operationId: getCustomerProfile
       consumes:
         - application/json
       produces:
@@ -99,31 +101,36 @@ paths:
         '200':
           description: Profile received successfully.
           schema:
-            $ref: '#/definitions/UserProfile'
+            $ref: '#/definitions/CustomerProfile'
         '401':
           description: Not Authorized
         '404':
           description: User profile not found
-    patch:
+  '/customermgmt/profile/addresses/{id}':
+    put:
       security:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Updates User's primary address.
+      summary: Update Customer address
       description: ''
-      operationId: profileUpdate
+      operationId: updateAddress
       parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
         - in: body
           name: body
           schema:
-            $ref: '#/definitions/ProfileUpdateRequest'
+            $ref: '#/definitions/PostalAddress'
       produces:
         - application/json
       responses:
         '200':
-          description: Address Updated successfully.
+          description: Address updated successfully
           schema:
-            $ref: '#/definitions/ProfileUpdate'
+            $ref: '#/definitions/AddressUpdateResponse'
         '401':
           description: Not Authorized
         '404':
@@ -136,7 +143,7 @@ paths:
         - Account Management
       summary: Gets list of retail bank accounts linked to User's login profile
       description: ''
-      operationId: accounts
+      operationId: getRetailAccountList
       consumes:
         - application/json
       produces:
@@ -147,7 +154,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/AccountList'
+              $ref: '#/definitions/RetailAccount'
         '401':
           description: Not Authorized
   '/accountmgmt/retail/accounts/{id}':
@@ -158,7 +165,7 @@ paths:
         - Account Management
       summary: Gets account details and balances for a given account
       description: ''
-      operationId: singleAccount
+      operationId: getRetailAccountDetails
       consumes:
         - application/json
       produces:
@@ -183,7 +190,7 @@ paths:
         - Account Management
       summary: Gets transactions history for a given account
       description: ''
-      operationId: transactions
+      operationId: getAccountTransactionHistory
       consumes:
         - application/json
       produces:
@@ -208,17 +215,18 @@ paths:
         '200':
           description: Transaction details retrieved successfully
           schema:
+            type: array
             items:
               $ref: '#/definitions/Transactions'
         '401':
           description: Not Authorized
-  '/fund-transfer':
+  '/payments/transfer/ft':
     post:
       security:
         - Bearer: []
       tags:
-        - Account Management
-      summary: Transfer funds from one account to another
+        - Payments
+      summary: Transfer funds from one linked account to another
       description: ''
       operationId: fundTransfer
       parameters:
@@ -259,13 +267,36 @@ definitions:
       bankId:
         type: string
         description: Specific bank Id which is associated with the user.
-  AuthToken:
+  AccessToken:
     type: object
     properties:
       accessToken:
         type: string
         description: Logged in user JWT token.
-  UserProfile:
+  WelcomeProfile:
+    type: object
+    description: Short version of full customer profile object, containing only key elements
+    properties:
+      name:
+        type: object
+        properties:
+          title:
+            type: string
+          firstName:
+            type: string
+          lastName:
+            type: string
+      lastLogin:
+        type: string
+        format: date-time
+      birthday:
+        type: string
+        format: date
+      gender:
+        type: string
+      customerType:
+        type: string
+  CustomerProfile:
     type: object
     properties:
       customerType:
@@ -309,66 +340,21 @@ definitions:
           residencyType:
             type: string
         type: object
-      addressList:
+      addresses:
         type: array
-        description: Customer address related information.
+        description: List of postal addresses associated with User
         items:
-          type: object
-          properties:
-            id:
-              type: number
-            line1:
-              type: string
-            line2:
-              type: string
-            line3:
-              type: string
-            line4:
-              type: string
-            type:
-              type: string
-            district:
-              type: string
-            city:
-              type: string
-            state:
-              type: string
-            postalCode:
-              type: string
-            country:
-              type: string
+          $ref: '#/definitions/PostalAddress'
       emails:
         type: array
-        description: Customer email related information.
+        description: List of email addresses associated with User
         items:
-          type: object
-          properties:
-            id:
-              type: number
-            email:
-              type: string
-            preferred:
-              type: boolean
-            type:
-              type: string
+          $ref: '#/definitions/Email'
       phones:
         type: array
-        description: Customer phone related information.
+        description: List of telephone numbers associated with User
         items:
-          type: object
-          properties:
-            id:
-              type: number
-            type:
-              type: string
-            number:
-              type: string
-            countryCode:
-              type: string
-            areaCode:
-              type: string
-            ext:
-              type: string
+          $ref: '#/definitions/Telephone'
       socialMedia:
         type: array
         description: Customer social media related information.
@@ -427,82 +413,16 @@ definitions:
         description: Customer financial related information.
         items:
           type: string
-  Profile:
+  AddressUpdateResponse: 
     type: object
-    description: Customer profile related information.
-    properties:
-      name:
-        type: object
-        properties:
-          title:
-            type: string
-          firstName:
-            type: string
-          lastName:
-            type: string
-      lastLogin:
-        type: string
-        format: date-time
-      birthday:
-        type: string
-        format: date
-      gender:
-        type: string
-      customerType:
-        type: string
-  ProfileUpdate:
-    type: object
-    description: Customer address Update.
-    properties:
-      trnType:
-        type: string
-      trnState:
-        type: object
-        properties:
-          status:
-            type: string
-          txId:
-            type: string
-  ProfileUpdateRequest:
-    type: object
-    properties:
-      t24UserId:
-        type: string
-      finacleUserId:
-        type: string
-      profile:
-        type: object
-        properties:
-          addressList:
-            type: array
-            items:
-              type: object
-              properties:
-                line1:
-                  type: string
-                line2:
-                  type: string
-                line3:
-                  type: string
-                line4:
-                  type: string
-                type:
-                  type: string
-                district:
-                  type: string
-                city:
-                  type: string
-                state:
-                  type: string
-                postalCode:
-                  type: string
-                country:
-                  type: string
-  MessagesResponse:
-    type: array
-    items:
-      $ref: '#/definitions/Message'
-  Message:
+    description: Response entity of addressUpdate operation
+    allOf: 
+    - $ref: '#/definitions/TxnResponse'
+    - type: object
+      properties: 
+        txnResponse: 
+          $ref: '#/definitions/PostalAddress' 
+  WelcomeMessage:
     properties:
       title:
         type: string
@@ -512,21 +432,20 @@ definitions:
         type: string
       link:
         type: string
-  AccountList:
-    $ref: '#/definitions/Account'
   AccountDetail:
     type: object
     properties:
       id:
         type: string
+        format: uuid
       name:
         type: string
       type:
         type: string
       balance:
         items:
-          $ref: '#/definitions/Balance'
-  Account:
+          $ref: '#/definitions/AccountBalance'
+  RetailAccount:
     type: object
     properties:
       accountNo:
@@ -547,7 +466,7 @@ definitions:
         type: string
       accountId:
         type: number
-  Balance:
+  AccountBalance:
     type: object
     description: Customer balance related information.
     properties:
@@ -589,3 +508,91 @@ definitions:
         type: string
       creditAmount:
         type: string
+  PostalAddress:
+    type: object
+    description: Based on https://schema.org/PostalAddress
+    properties:
+      id:
+        type: string
+        description: Addresss identifier unique to a User, e.g. add1, 001
+      type:
+        type: string
+        description: Business defined classification for addresses, e.g. mailing, residence
+      label: 
+        type: string
+        description: User defined optional label for easy reference, e.g. myhome
+      line1:
+        type: string
+      line2:
+        type: string
+      line3:
+        type: string
+      line4:
+        type: string
+      locality:
+        type: string
+        description: City/Town/Township, e.g. Mountain View
+      region:
+        type: string
+        description: Province/Region/State, e.g. CA
+      postalCode:
+        type: string
+      country:
+        type: string
+  Telephone: 
+    type: object
+    description: Based on https://schema.org/telephone
+    properties:
+      id:
+        type: string
+        description: Email identifier unique to a User, e.g. email01, 001
+      type:
+        type: string
+        description: Business defined classification for emails, e.g. personal, work
+      label: 
+        type: string
+        description: User defined optional label for easy reference, e.g. gmailid
+      number:
+        type: string
+        description: Telephone number, e.g. +16509036300, (650) 903-6300, 6509036300
+      countryCode:
+        type: string
+        description: Optional if already included in number, e.g. +1
+      areaCode:
+        type: string
+        description: Optional if already included in number, e.g. 650
+      ext:
+        type: string
+        description: Optional extension number, e.g. 100
+  Email: 
+    type: object
+    description: Based on https://schema.org/email
+    properties:
+      id:
+        type: string
+        description: Email identifier unique to a User, e.g. email01, 001
+      type:
+        type: string
+        description: Business defined classification for emails, e.g. personal, work
+      label: 
+        type: string
+        description: User defined optional label for easy reference, e.g. gmailid
+      email:
+        type: string
+        description: E-Mail address, e.g. john@example.com
+      preferred:
+        type: boolean
+  TxnResponse: 
+    type: object
+    description: Generic schema representing response of a transaction process 
+    properties: 
+      txnId:
+        type: string
+        format: uuid
+        description: UUID to identify this transaction within the system
+      txnRef: 
+        type: string
+        description: Bank or system assigned transaction reference number, for Customer communication purposes
+      txnStatus: 
+        type: string
+        description: Bank transaction processing status after acceptance, e.g. accepted, pending, queued 
