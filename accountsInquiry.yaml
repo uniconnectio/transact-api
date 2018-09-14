@@ -114,7 +114,9 @@ paths:
         '200':
           description: Relationship list retrieved successfully 
           schema:
-            $ref: '#/definitions/CustomerRelationships'
+            type: array
+            items: 
+              $ref: '#/definitions/CustomerRelationship'
         '401':
           description: Not Authorized
         '404':
@@ -149,8 +151,18 @@ paths:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Gets list of addresses associated with Customer across all relationships  
+      summary: Gets list of addresses associated with Customer across select or all relationships
       operationId: getPostalAddressList
+      parameters:
+        - name: relids
+          in: query
+          required: false
+          description: > 
+            Optional list of relationship ids to filter output, e.g. ["123456", "345678"]. If not
+            specified, then addresses across all relationships will be returned. 
+          type: array
+          items: 
+            type: string
       consumes:
         - application/json
       produces:
@@ -164,6 +176,8 @@ paths:
               $ref: '#/definitions/PostalAddress'
         '401':
           description: Not Authorized
+        '404':
+          description: No addresses found
   /customermgmt/profile/addresses/{id}:
     put:
       security:
@@ -172,7 +186,7 @@ paths:
         - Customer Management
       summary: Updates specified Customer address object 
       description: ''
-      operationId: updateAddress
+      operationId: updatePostalAddress
       parameters:
         - name: id
           in: path
@@ -192,7 +206,131 @@ paths:
         '401':
           description: Not Authorized
         '404':
-          description: User profile not found
+          description: Address not found
+  /customermgmt/profile/telephones:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Customer Management
+      summary: Gets list of telephones associated with Customer across select or all relationships
+      operationId: getTelephoneList
+      parameters:
+        - name: relids
+          in: query
+          required: false
+          description: > 
+            Optional list of relationship ids to filter output, e.g. ["123456", "345678"]. If not
+            specified, then telephones across all relationships will be returned. 
+          type: array
+          items: 
+            type: string
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Telephone list retrieved successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Telephone'
+        '401':
+          description: Not Authorized
+        '404':
+          description: No telephones found
+  /customermgmt/profile/telephones/{id}:
+    put:
+      security:
+        - Bearer: []
+      tags:
+        - Customer Management
+      summary: Updates specified Customer telephone object 
+      description: ''
+      operationId: updateTelephone
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/Telephone'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Telephone updated successfully
+          schema:
+            $ref: '#/definitions/TelephoneUpdateResponse'
+        '401':
+          description: Not Authorized
+        '404':
+          description: Telephone not found
+  /customermgmt/profile/emails:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Customer Management
+      summary: Gets list of emails associated with Customer across select or all relationships
+      operationId: getEmailList
+      parameters:
+        - name: relids
+          in: query
+          required: false
+          description: > 
+            Optional list of relationship ids to filter output, e.g. ["123456", "345678"]. If not
+            specified, then emails across all relationships will be returned. 
+          type: array
+          items: 
+            type: string
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Email list retrieved successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Email'
+        '401':
+          description: Not Authorized
+        '404':
+          description: No emails found
+  /customermgmt/profile/emails/{id}:
+    put:
+      security:
+        - Bearer: []
+      tags:
+        - Customer Management
+      summary: Updates specified Customer email object 
+      description: ''
+      operationId: updateEmail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/Email'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Email updated successfully
+          schema:
+            $ref: '#/definitions/EmailUpdateResponse'
+        '401':
+          description: Not Authorized
+        '404':
+          description: Email not found
   /accountmgmt/retail/accounts:
     get:
       security:
@@ -355,20 +493,25 @@ definitions:
       customerType:
         type: string
         description: Bank assigned customer segment or class type, e.g. basic, premier, gold 
-  CustomerRelationships:
-    type: array
-    items:
-      type: object
-      properties: 
-        id: 
-          type: string
-          description: Relationship ID
-        relType: 
-          type: string
-          description: Type of relationship, e.g. Joint, JWTROS, household
-        default: 
-          type: boolean
-          description: Indicates if this relationship is default or primary for Customer 
+  CustomerRelationship:
+    type: object
+    description: Customer Relationship object
+    properties: 
+      id: 
+        type: string
+        description: System assigned unique relationship id, e.g. uuid
+      relNo: 
+        type: string
+        description: Bank assigned relationship account number
+      type: 
+        type: string
+        description: Bank assigned relationship type, e.g. Joint, JWTROS, household
+      title: 
+        type: string
+        description: Bank assigned relationship title, e.g. Basic Banking Package
+      default: 
+        type: boolean
+        description: Indicates if this relationship is default or primary for Customer 
   CustomerProfile:
     type: object
     properties:
@@ -425,7 +568,7 @@ definitions:
         description: List of telephone numbers associated with User
         items:
           $ref: '#/definitions/Telephone'
-      socialMedia:
+      socialMediaAccounts:
         type: array
         description: Customer social media related information.
         items:
@@ -488,13 +631,31 @@ definitions:
           type: string
   AddressUpdateResponse: 
     type: object
-    description: Response entity of addressUpdate operation
+    description: Response entity of updatePostalAddress operation
     allOf: 
     - $ref: '#/definitions/TxnResponse'
     - type: object
       properties: 
         txnResponse: 
           $ref: '#/definitions/PostalAddress' 
+  TelephoneUpdateResponse: 
+    type: object
+    description: Response entity of updateTelephone operation
+    allOf: 
+    - $ref: '#/definitions/TxnResponse'
+    - type: object
+      properties: 
+        txnResponse: 
+          $ref: '#/definitions/Telephone' 
+  EmailUpdateResponse: 
+    type: object
+    description: Response entity of updateEmail operation
+    allOf: 
+    - $ref: '#/definitions/TxnResponse'
+    - type: object
+      properties: 
+        txnResponse: 
+          $ref: '#/definitions/Email' 
   WelcomeMessage:
     properties:
       title:
@@ -587,10 +748,13 @@ definitions:
     properties:
       id:
         type: string
-        description: ID to uniquely retrieve or update this address object, e.g. add1, 001
+        description: ID to uniquely retrieve/update this address object, e.g. add1, 001
+      relid:
+        type: string
+        description: Relationship ID, if this address is associated with a specific relationship
       type:
         type: string
-        description: Business defined classification for addresses, e.g. mailing, residence
+        description: Business defined classification for addresses, e.g. mailing, residential
       label: 
         type: string
         description: User defined optional label for easy reference, e.g. myhome
@@ -607,7 +771,7 @@ definitions:
         description: City/Town/Township, e.g. Mountain View
       region:
         type: string
-        description: Province/Region/State, e.g. CA
+        description: Province/Region/State/Territory, e.g. CA
       postalCode:
         type: string
       country:
@@ -619,12 +783,15 @@ definitions:
       id:
         type: string
         description: ID to uniquely retrieve or update this phone object, e.g. tel01, 001
+      relid:
+        type: string
+        description: Relationship ID, if this telephone is associated with a specific relationship
       type:
         type: string
-        description: Business defined classification for emails, e.g. personal, work
+        description: Business defined classification for telephone, e.g. personal, work
       label: 
         type: string
-        description: User defined optional label for easy reference, e.g. gmailid
+        description: User defined optional label for easy reference, e.g. myhomeph
       number:
         type: string
         description: Telephone number, e.g. +16509036300, (650) 903-6300, 6509036300
@@ -644,6 +811,9 @@ definitions:
       id:
         type: string
         description: ID to uniquely retrieve or update this email object, e.g. email01, 001
+      relid:
+        type: string
+        description: Relationship ID, if this email is associated with a specific relationship
       type:
         type: string
         description: Business defined classification for emails, e.g. personal, work
@@ -652,7 +822,7 @@ definitions:
         description: User defined optional label for easy reference, e.g. gmailid
       email:
         type: string
-        description: E-Mail address, e.g. john@example.com
+        description: E-Mail address, e.g. foo@example.com
       preferred:
         type: boolean
   TxnResponse: 
