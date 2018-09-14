@@ -155,9 +155,12 @@ paths:
       parameters:
         - name: relid
           in: path
-          required: true
+          required: false
           type: string
-          description: Relationship ID
+          description: > 
+            Relationship ID for which address list is to be retrieved. If omitted, the default
+            relationship is used, or if no relationship is present, address list at Customer level
+            is to be retrieved.   
       consumes:
         - application/json
       produces:
@@ -183,9 +186,11 @@ paths:
       parameters:
         - name: relid
           in: path
-          required: true
+          required: false
           type: string
-          description: Relationship ID
+          description: > 
+            Relationship ID. May be omitted if `id` parameter can uniquely identify an address
+            object to update, or if Customer has no relationship entity. 
         - name: id
           in: path
           required: true
