@@ -150,7 +150,6 @@ paths:
       tags:
         - Customer Management
       summary: Gets list of addresses associated with Customer across all relationships  
-      description:  
       operationId: getPostalAddressList
       consumes:
         - application/json
