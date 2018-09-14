@@ -155,12 +155,34 @@ paths:
       parameters:
         - name: relid
           in: path
-          required: false
+          required: true
           type: string
           description: > 
             Relationship ID for which address list is to be retrieved. If omitted, the default
             relationship is used, or if no relationship is present, address list at Customer level
             is to be retrieved.   
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Address List retrieved successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PostalAddress'
+        '401':
+          description: Not Authorized
+  /customermgmt/profile/addresses:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Customer Management
+      summary: Gets list of addresses associated with Customer or with Customer's default relationship  
+      description: > 
+      operationId: getPostalAddressList
       consumes:
         - application/json
       produces:
@@ -182,15 +204,42 @@ paths:
         - Customer Management
       summary: Updates address associated with specified Customer relationship
       description: ''
-      operationId: updateAddress
+      operationId: updateAddressByRelationship
       parameters:
         - name: relid
           in: path
-          required: false
+          required: true
           type: string
-          description: > 
-            Relationship ID. May be omitted if `id` parameter can uniquely identify an address
-            object to update, or if Customer has no relationship entity. 
+          description: Relationship ID 
+        - name: id
+          in: path
+          required: true
+          type: string
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/PostalAddress'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Address updated successfully
+          schema:
+            $ref: '#/definitions/AddressUpdateResponse'
+        '401':
+          description: Not Authorized
+        '404':
+          description: User profile not found
+  /customermgmt/profile/addresses/{id}:
+    put:
+      security:
+        - Bearer: []
+      tags:
+        - Customer Management
+      summary: Updates Customer address or address associated with default relationship 
+      description: ''
+      operationId: updateAddress
+      parameters:
         - name: id
           in: path
           required: true
