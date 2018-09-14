@@ -1,6 +1,8 @@
 swagger: '2.0'
 info:
-  description: This document describes a subset of UniConnect Transact&trade; Open Banking API collection. These APIs are implemented in REST-like conventions, uses HTTP/1.1 and JSON messages.
+  description: > 
+    This document describes a subset of UniConnect Transact&trade; Open Banking API collection.
+    These APIs are implemented in REST-like conventions, uses HTTP/1.1 and JSON messages.
   version: 1.0.0
   title: UniConnect Transact™ API
   contact:
@@ -19,8 +21,12 @@ paths:
     post:
       tags:
         - Security
-      summary: Validates User's credentials, creates new server-side session and returns an Access-Token containing sessionid
-      description: This operation works similar to [OAuth2's Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3) flow.
+      summary: > 
+        Validates Customer credentials, creates a new server-side session and returns an Access-Token
+        containing sessionid. 
+      description: > 
+        This operation works similar to [OAuth2's Resource Owner Password Credentials
+        Grant](https://tools.ietf.org/html/rfc6749#section-4.3) flow.
       operationId: authenticateUser
       consumes:
         - application/json
@@ -46,7 +52,7 @@ paths:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Gets User's basic profile data, such as name, dob and last login time
+      summary: Gets User's basic profile data, such as name, dob and last login time. 
       description: ''
       operationId: getWelcomeProfile
       consumes:
@@ -68,7 +74,9 @@ paths:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Gets list of welcome messages and notices, such as new feature announcement or system maintenance notice
+      summary: > 
+        Gets list of welcome messages and notices, such as new feature announcement or system
+        maintenance notice  
       description: ''
       operationId: getWelcomeMessageList
       consumes:
@@ -84,15 +92,44 @@ paths:
               $ref: '#/definitions/WelcomeMessage'
         '401':
           description: Not Authorized
-  /customermgmt/profile/profile:
+  /customermgmt/profile/relationships:
     get:
       security:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Gets User's full profile data, which includes biographics, demographics and contact details
-      description: ''
-      operationId: getCustomerProfile
+      summary: Gets list of relationships associated with Customer   
+      description: > 
+        A relationship typically groups one or more accounts together, and may be shared by multiple
+        Customers. E.g. A joint checking account creates a relationship involving one checking
+        account and two (or more) Customers. Similarly, a Customer could have two relationships each
+        containing a pair of checking and savings account. In general, contact details such as
+        postal address, phone numbers and email are maintained at a relationship level. 
+      operationId: getCustomerRelationships
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Relationship list retrieved successfully 
+          schema:
+            $ref: '#/definitions/CustomerRelationships'
+        '401':
+          description: Not Authorized
+        '404':
+          description: No relationships found
+  /customermgmt/profile/profile: 
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Customer Management
+      summary: Gets Customer's primary or default profile
+      description: > 
+        Customer profile contains data describing the Customer, and may includes biographical data,
+        income data, employer details and contact information. 
+      operationId: getCustomerPrimaryProfile
       consumes:
         - application/json
       produces:
@@ -106,16 +143,49 @@ paths:
           description: Not Authorized
         '404':
           description: User profile not found
-  '/customermgmt/profile/addresses/{id}':
+  /customermgmt/profile/{relid}/addresses:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Customer Management
+      summary: Gets list of addresses associated with specified Customer relationship 
+      description: > 
+      operationId: getPostalAddressListByRelationship
+      parameters:
+        - name: relid
+          in: path
+          required: true
+          type: string
+          description: Relationship ID
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Address List retrieved successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PostalAddress'
+        '401':
+          description: Not Authorized
+  /customermgmt/profile/{relid}/addresses/{id}:
     put:
       security:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Update Customer address
+      summary: Updates address associated with specified Customer relationship
       description: ''
       operationId: updateAddress
       parameters:
+        - name: relid
+          in: path
+          required: true
+          type: string
+          description: Relationship ID
         - name: id
           in: path
           required: true
@@ -296,50 +366,62 @@ definitions:
         type: string
       customerType:
         type: string
+        description: Bank assigned customer segment or class type, e.g. basic, premier, gold 
+  CustomerRelationships:
+    type: array
+    items:
+      type: object
+      properties: 
+        id: 
+          type: string
+          description: Relationship ID
+        relType: 
+          type: string
+          description: Type of relationship, e.g. Joint, JWTROS, household
+        default: 
+          type: boolean
+          description: Indicates if this relationship is default or primary for Customer 
   CustomerProfile:
     type: object
     properties:
       customerType:
         type: string
-        description: Type of logged in customer.
-      customerSegment:
-        type: string
-        description: Customer belonging segment.
-      customerParticulars:
-        description: This will contains basic personal information like firstName etc.
+        description: Bank assigned customer segment or class type, e.g. basic, premier, gold 
+      biographics:
+        description: Customer's biographical data, like name, dob, marital status, etc.
+        type: object
         properties:
           firstName:
             type: string
+          middleName: 
+            type: string 
           lastName:
-            type: string
-          gender:
             type: string
           prefix:
             type: string
+            description: Name prefix, e.g. Mr, Mrs, Dr, Sir
           suffix:
             type: string
-        type: object
-      demographics:
-        description: Contains the customer demographic information.
-        properties:
+            description: Name suffix, e.g. Jr, Sr, II
+          gender:
+            type: string
           dob:
             type: string
-            format: date-time
+            format: date
           placeOfBirth:
             type: string
           countryOfBirth:
             type: string
           residencyCountryCode:
             type: string
-          nationality:
-            type: string
-          maritalStatus:
-            type: string
           residencyStatus:
             type: string
           residencyType:
             type: string
-        type: object
+          nationality:
+            type: string
+          maritalStatus:
+            type: string
       addresses:
         type: array
         description: List of postal addresses associated with User
@@ -362,7 +444,10 @@ definitions:
           type: object
           properties:
             id:
-              type: number
+              type: string
+            service:
+              type: string
+              description: Social media service name, e.g. Facebook, Twitter, Wechat, Snapchat 
             accountId:
               type: string
             preferred:
@@ -514,7 +599,7 @@ definitions:
     properties:
       id:
         type: string
-        description: Addresss identifier unique to a User, e.g. add1, 001
+        description: ID to uniquely retrieve or update this address object, e.g. add1, 001
       type:
         type: string
         description: Business defined classification for addresses, e.g. mailing, residence
@@ -545,7 +630,7 @@ definitions:
     properties:
       id:
         type: string
-        description: Email identifier unique to a User, e.g. email01, 001
+        description: ID to uniquely retrieve or update this phone object, e.g. tel01, 001
       type:
         type: string
         description: Business defined classification for emails, e.g. personal, work
@@ -570,7 +655,7 @@ definitions:
     properties:
       id:
         type: string
-        description: Email identifier unique to a User, e.g. email01, 001
+        description: ID to uniquely retrieve or update this email object, e.g. email01, 001
       type:
         type: string
         description: Business defined classification for emails, e.g. personal, work
