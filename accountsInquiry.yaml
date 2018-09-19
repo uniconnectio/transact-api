@@ -1,9 +1,25 @@
 swagger: '2.0'
 info:
-  description: > 
+  description: | 
     This document describes a subset of UniConnect Transact&trade; Open Banking API collection.
-    These APIs are implemented in REST-like conventions, uses HTTP/1.1 and JSON messages.
-  version: 1.0.0
+    These APIs are implemented using REST-like conventions, uses HTTP/1.1 and JSON messages. 
+
+    UniConnect Transact&trade; currently supports Retail Bank and Small Business (fka SME) accounts.
+    These APIs are intended for consumer facing applications, and are not suitable for developing 
+    assisted-channel, banch, backoffice or sales force applications. 
+
+    The diagram below gives a high-level view of how a typical application (App) will communicate with
+    a Bank or FI (Backend) using UniConnect Open Banking APIs (System). Keep this picture in mind as
+    you see references of Frontend, System and Backend throughout this document. 
+
+        +--------------+       +--------------+       +--------------+
+        |     Apps     |       |  UniConnect  |       |   Bank/FIs   |
+        |              <------->     APIs     <------->              |
+        |  (Frontend)  |       |   (System)   |       |   (Backend)  |
+        +--------------+       +--------------+       +--------------+
+
+
+  version: 2.0.1
   title: UniConnect Transact™ API
   contact:
     email: api-support@uniconnect.io
@@ -21,11 +37,9 @@ paths:
     post:
       tags:
         - Security
-      summary: > 
-        Validates Customer credentials, creates a new server-side session and returns an Access-Token
-        containing sessionid. 
-      description: > 
-        This operation works similar to [OAuth2's Resource Owner Password Credentials
+      summary: Validates customer credentials, creates a new server-side session and returns an 
+        Access-Token containing sessionid. 
+      description: This operation works similar to [OAuth2's Resource Owner Password Credentials
         Grant](https://tools.ietf.org/html/rfc6749#section-4.3) flow.
       operationId: authenticateUser
       consumes:
@@ -74,8 +88,7 @@ paths:
         - Bearer: []
       tags:
         - Customer Management
-      summary: > 
-        Gets list of welcome messages and notices, such as new feature announcement or system
+      summary: Gets list of welcome messages and notices, such as new feature announcement or system
         maintenance notice  
       description: ''
       operationId: getWelcomeMessageList
@@ -98,13 +111,15 @@ paths:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Gets list of relationships associated with Customer   
+      summary: Gets list of relationships associated with customer   
       description: > 
         A relationship typically groups one or more accounts together, and may be shared by multiple
-        Customers. E.g. A joint checking account creates a relationship involving one checking
-        account and two (or more) Customers. Similarly, a Customer could have two relationships each
+        customers. E.g. A joint checking account creates a relationship involving one checking
+        account and two (or more) customers. Similarly, a customer could have two relationships each
         containing a pair of checking and savings account. In general, contact details such as
-        postal address, phone numbers and email are maintained at a relationship level. 
+        postal address, phone numbers and email are maintained at a relationship level. Similarly, 
+        statements are also generated at relationship level. Some backends may not implement a 
+        concept of relationships, in which case this operation will return a 404 response code. 
       operationId: getCustomerRelationships
       consumes:
         - application/json
@@ -127,10 +142,9 @@ paths:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Gets Customer's primary or default profile
-      description: > 
-        Customer profile contains data describing the Customer, and may includes biographical data,
-        income data, employer details and contact information. 
+      summary: Gets customer's primary or default profile
+      description: Customer profile contains data describing the customer, and may includes 
+        biographical data, income data, employer details and contact information. 
       operationId: getCustomerPrimaryProfile
       consumes:
         - application/json
@@ -151,15 +165,14 @@ paths:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Gets list of addresses associated with Customer across select or all relationships
+      summary: Gets list of addresses associated with customer across select or all relationships
       operationId: getPostalAddressList
       parameters:
         - name: relids
           in: query
           required: false
-          description: > 
-            Optional list of relationship ids to filter output, e.g. ["123456", "345678"]. If not
-            specified, then addresses across all relationships will be returned. 
+          description: Optional list of relationship ids to filter output, eg. ["123456", "345678"].
+            If not specified, then addresses across all relationships will be returned. 
           type: array
           items: 
             type: string
@@ -184,7 +197,7 @@ paths:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Updates specified Customer address object 
+      summary: Updates specified customer address object 
       description: ''
       operationId: updatePostalAddress
       parameters:
@@ -213,15 +226,14 @@ paths:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Gets list of telephones associated with Customer across select or all relationships
+      summary: Gets list of telephones associated with customer across select or all relationships
       operationId: getTelephoneList
       parameters:
         - name: relids
           in: query
           required: false
-          description: > 
-            Optional list of relationship ids to filter output, e.g. ["123456", "345678"]. If not
-            specified, then telephones across all relationships will be returned. 
+          description: Optional list of relationship ids to filter output, eg. ["123456", "345678"].
+            If not specified, then telephones across all relationships will be returned. 
           type: array
           items: 
             type: string
@@ -246,7 +258,7 @@ paths:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Updates specified Customer telephone object 
+      summary: Updates specified customer telephone object 
       description: ''
       operationId: updateTelephone
       parameters:
@@ -275,15 +287,14 @@ paths:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Gets list of emails associated with Customer across select or all relationships
+      summary: Gets list of emails associated with customer across select or all relationships
       operationId: getEmailList
       parameters:
         - name: relids
           in: query
           required: false
-          description: > 
-            Optional list of relationship ids to filter output, e.g. ["123456", "345678"]. If not
-            specified, then emails across all relationships will be returned. 
+          description: Optional list of relationship ids to filter output, eg. ["123456", "345678"].
+            If not specified, then emails across all relationships will be returned. 
           type: array
           items: 
             type: string
@@ -308,7 +319,7 @@ paths:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Updates specified Customer email object 
+      summary: Updates specified customer email object 
       description: ''
       operationId: updateEmail
       parameters:
@@ -337,8 +348,10 @@ paths:
         - Bearer: []
       tags:
         - Account Management
-      summary: Gets list of retail bank accounts linked to User's login profile
-      description: ''
+      summary: Gets list of retail accounts linked to customer across all relationships
+      description: Retail accounts are banking products offered to consumers. These include checking
+        and savings accounts, term deposits, personal loans, mortgage, credit line, and credit cards. 
+        It is distinct from commercial bank accounts, investment accounts and capital markets.  
       operationId: getRetailAccountList
       consumes:
         - application/json
@@ -439,6 +452,19 @@ paths:
         '401':
           description: Not Authorized
 definitions:
+  Error: 
+    type: object
+    description: Generic error object
+    properties: 
+      code: 
+        type: string
+        description: Error code returned by backend or system
+      message: 
+        type: string
+        description: Error message returned by backend or system
+      moreInfo: 
+        type: object
+        description: Error object returned by backend or system, if any
   Credentials:
     type: object
     required: 
@@ -492,7 +518,7 @@ definitions:
         type: string
       customerType:
         type: string
-        description: Bank assigned customer segment or class type, e.g. basic, premier, gold 
+        description: Backend assigned customer segment or class type, e.g. basic, premier, gold 
   CustomerRelationship:
     type: object
     description: Customer Relationship object
@@ -502,22 +528,22 @@ definitions:
         description: System assigned unique relationship id, e.g. uuid
       relNo: 
         type: string
-        description: Bank assigned relationship account number
+        description: Backend assigned relationship account number
       type: 
         type: string
-        description: Bank assigned relationship type, e.g. Joint, JWTROS, household
-      title: 
+        description: Backend assigned relationship type, e.g. Joint, JWTROS, household
+      description: 
         type: string
-        description: Bank assigned relationship title, e.g. Basic Banking Package
+        description: Backend assigned relationship name/description, e.g. Basic Banking Package
       default: 
         type: boolean
-        description: Indicates if this relationship is default or primary for Customer 
+        description: Indicates if this relationship is default or primary for customer 
   CustomerProfile:
     type: object
     properties:
       customerType:
         type: string
-        description: Bank assigned customer segment or class type, e.g. basic, premier, gold 
+        description: Backend assigned customer segment or class type, e.g. basic, premier, gold 
       biographics:
         description: Customer's biographical data, like name, dob, marital status, etc.
         type: object
@@ -835,7 +861,9 @@ definitions:
         description: UUID to identify this transaction within the system
       txnRef: 
         type: string
-        description: Bank or system assigned transaction reference number, for Customer communication purposes
+        description: Backend or system assigned transaction reference number, for customer 
+          communication purposes
       txnStatus: 
         type: string
-        description: Bank transaction processing status after acceptance, e.g. accepted, pending, queued 
+        description: Backend transaction processing status after acceptance, e.g. accepted, 
+          pending, queued
