@@ -4,13 +4,14 @@ info:
     This document describes a subset of UniConnect Transact&trade; Open Banking API collection.
     These APIs are implemented using REST-like conventions, uses HTTP/1.1 and JSON messages. 
 
-    UniConnect Transact&trade; currently supports Retail Bank and Small Business (fka SME) accounts.
-    These APIs are intended for consumer facing applications, and are not suitable for developing 
-    assisted-channel, banch, backoffice or sales force applications. 
+    UniConnect Transact&trade; currently supports Retail (or Personal) and Small-Medium Enterprise
+    (or Local Commercial) Banking accounts. The APIs are targeted for developers of consumer facing
+    applications, and are not suitable for developing assisted-channel, branch, backoffice or sales
+    force applications. 
 
     The diagram below gives a high-level view of how a typical application (App) will communicate with
-    a Bank or FI (Backend) using UniConnect Open Banking APIs (System). Keep this picture in mind as
-    you see references of Frontend, System and Backend throughout this document. 
+    a Bank or FI (Backend) using UniConnect's Open Banking APIs (System). Keep this picture in mind as
+    you see references of frontend, system and backend throughout this document. 
 
         +--------------+       +--------------+       +--------------+
         |     Apps     |       |  UniConnect  |       |   Bank/FIs   |
@@ -66,7 +67,7 @@ paths:
         - Bearer: []
       tags:
         - Customer Management
-      summary: Gets User's basic profile data, such as name, dob and last login time. 
+      summary: Gets customer's basic profile data, such as name, dob and last login time. 
       description: ''
       operationId: getWelcomeProfile
       consumes:
@@ -81,7 +82,7 @@ paths:
         '401':
           description: Not Authorized
         '404':
-          description: User profile not found
+          description: Customer profile not found
   /customermgmt/welcome/messages:
     get:
       security:
@@ -409,16 +410,16 @@ paths:
           in: path
           required: true
           type: string
-          description: Transaction details retrieved successfully
+          description: ID referencing the requested account 
         - name: fromDate
           in: query
           type: string
-          description: Transaction histrory start date.
+          description: Transaction history start date
           format: date
         - name: toDate
           in: query
           type: string
-          description: Transaction histrory end date.
+          description: Transaction history end date 
           format: date
       responses:
         '200':
@@ -426,7 +427,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/Transactions'
+              $ref: '#/definitions/Transaction'
         '401':
           description: Not Authorized
   '/payments/transfer/ft':
@@ -692,68 +693,149 @@ definitions:
         type: string
       link:
         type: string
-  AccountDetail:
-    type: object
-    properties:
-      id:
-        type: string
-        format: uuid
-      name:
-        type: string
-      type:
-        type: string
-      balance:
-        items:
-          $ref: '#/definitions/AccountBalance'
   RetailAccount:
     type: object
     properties:
-      accountNo:
+      accountId:
         type: string
-      currency:
+        description: System generated id representing this account object, valid only for current session
+      accountNoMasked:
         type: string
-      workBalance:
+        description: Account number masked based on system defined rules
+      category:
         type: string
+        description: | 
+          Primary category or type of this account. Possible values are: 
+          `deposit`, `loan`, `lineOfCredit`, `creditCard`, `investment`
+      subCategory:
+        type: string
+        description: | 
+          Sub-category or sub-type of this account. Possible values are: 
+          `deposit` - checking, savings, timeDeposit, moneyMarket
+          `loan` - homeLoan, personalLoan, businessLoan
+          `lineOfCredit` - unsecured, secured, margin
+          `creditCard` - visa, masterCard, americanExpress, diners, unionPay, jcb
+          `investment` - brokerage, retirement, mutualFund
       accountType:
         type: string
-      ledgerBalance:
+        description: Backend defined account/product type code or name, e.g. 071
+      description:
         type: string
-      clearedBalance:
+        description: Branding or name of the account product, e.g. Platinum Checking Account
+      label:
         type: string
-      lockBalance:
-        type: string
-      usableBalance:
-        type: string
-      accountId:
-        type: number
-  AccountBalance:
-    type: object
-    description: Customer balance related information.
-    properties:
-      balanceType:
-        type: string
-      amount:
-        type: number
-        format: double
+        description: Customer defined friendly name for the account, e.g. Harry-Sally Joint Checking
       currencyCode:
         type: string
-  Transactions:
+        description: ISO 4217 currency code, could be either 3-letters or 3-numbers, e.g. USD or 840
+      status:
+        type: string
+        description: Backend defined status of account, e.g. active, dormant, closed
+      currentBalance:
+        type: string
+        description: Most up-to-date balance, accounting for all transactions. It includes all
+        deposits that are on-hold and not yet available for withdrawal
+      availableBalance:
+        type: string
+        description: Account balance that is available to withdraw or use 
+      unpaidBalance:
+        type: string
+        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to total
+        outstanding balance owed by customer 
+      availableCredit:
+        type: string
+        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to the amount
+        that customer can use before hiting account's credit line limit. 
+  AccountDetail:
+    type: object
+    properties:
+      creditLineAmount:
+        type: number
+        description: ''
+      overdraftLimitAmount:
+        type: number
+        description: ''
+      interestAmountYTD:
+        type: number
+        description: ''
+      interestAmountLastYear:
+        type: number
+        description: ''
+      interestRate:
+        type: number
+        description: ''
+      interestRateType:
+        type: string
+        description: ''
+      nextPaymentAmount:
+        type: number
+        description: ''
+      nextPaymentPrincipal:
+        type: number
+        description: ''
+      nextPaymentInterest:
+        type: number
+        description: ''
+      nextPaymentDate:
+        type: date
+        description: ''
+      lastPaymentAmount:
+        type: number
+        description: ''
+      lastPaymentDate:
+        type: date
+        description: ''
+      lastBillBalance:
+        type: number
+        description: ''
+      lastBillDate:
+        type: date
+        description: ''
+      minimumDueAmount:
+        type: number
+        description: ''
+      monthlyPaymentAmount:
+        type: number
+  Transaction:
     type: object
     description: Customer transaction related information.
     properties:
+      id:
+        type: string
+        description: System returned unique identifier for a transaction object
+      referenceNo: 
+        type: string
+        description: Backend returned transaction reference number. Where application, it maps to
+          ISO8583 transaction reference number, which is often an alphanumeric string. 
       transactionDate:
         type: string
         format: date-time
+        description: When transaction was initiated. TODO: insert example in right format
+      transactionPostingDate:
+        type: string
+        format: date-time
+        description: When transaction was posted or settled, usually only available for credit and
+          debit card transactions. TODO: insert example in right format
       description:
         type: string
-      reference:
+        description: Description field of transaction, typically including payee details
+      currencyCode:
         type: string
-      localCurrency:
+        description: ISO 4217 currency code, could be either 3-letters or 3-numbers, e.g. USD or 840
+      debitAmount:
+        type: number
+        description: Amount taken away from the account, such as a charge, payment or transfer out. 
+      creditAmount:
+        type: number
+        description: Amount added to the account, such as a reversal, incoming transfer
+      balanceAmount: 
+        type: number
+        description: Balance on account after factoring this transaction, or end-of-day account balance 
+      mcc: 
         type: string
-      debit:
-        type: string
-      credit:
-        type: string
+        description: Merchant Category Code, generally available for credit and debit card
+          transactions. Where applicable, it maps to ISO8583 MCC field. Values and format are
+          specific to each payment network such as Visa, MasterCard, Maestro, Interlink, etc. 
   FundTransfer:
     type: object
     description: Fund Transfer related information.
@@ -783,7 +865,7 @@ definitions:
         description: Business defined classification for addresses, e.g. mailing, residential
       label: 
         type: string
-        description: User defined optional label for easy reference, e.g. myhome
+        description: Customer defined optional label for easy reference, e.g. myhome
       line1:
         type: string
       line2:
@@ -823,13 +905,15 @@ definitions:
         description: Telephone number, e.g. +16509036300, (650) 903-6300, 6509036300
       countryCode:
         type: string
-        description: Optional if already included in number, e.g. +1
+        description: IDD code, optional if already included in number, e.g. +1
       areaCode:
         type: string
         description: Optional if already included in number, e.g. 650
       ext:
         type: string
         description: Optional extension number, e.g. 100
+      preferred:
+        type: boolean
   Email: 
     type: object
     description: Based on https://schema.org/email
