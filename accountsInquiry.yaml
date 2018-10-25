@@ -21,7 +21,7 @@ info:
 
 
   version: 2.0.1
-  title: Testing API
+  title: UniConnect Transact™ API
   contact:
     email: api-support@uniconnect.io
 host: uniconnect-transact.azure-api.net
