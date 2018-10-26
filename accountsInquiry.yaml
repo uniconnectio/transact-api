@@ -63,8 +63,11 @@ paths:
           description: Invalid credentials.
   /customermgmt/welcome/profile:
     get:
-      security:
-        - Bearer: []
+      parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
       tags:
         - Customer Management
       summary: Gets customer's basic profile data, such as name, dob and last login time. 
@@ -85,8 +88,11 @@ paths:
           description: Customer profile not found
   /customermgmt/welcome/messages:
     get:
-      security:
-        - Bearer: []
+      parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
       tags:
         - Customer Management
       summary: Gets list of welcome messages and notices, such as new feature announcement or system
@@ -108,8 +114,11 @@ paths:
           description: Not Authorized
   /customermgmt/profile/relationships:
     get:
-      security:
-        - Bearer: []
+      parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
       tags:
         - Customer Management
       summary: Gets list of relationships associated with customer   
@@ -139,8 +148,11 @@ paths:
           description: No relationships found
   /customermgmt/profile/profile: 
     get:
-      security:
-        - Bearer: []
+      parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
       tags:
         - Customer Management
       summary: Gets customer's primary or default profile
@@ -162,13 +174,15 @@ paths:
           description: User profile not found
   /customermgmt/profile/addresses:
     get:
-      security:
-        - Bearer: []
       tags:
         - Customer Management
       summary: Gets list of addresses associated with customer across select or all relationships
       operationId: getPostalAddressList
       parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
         - name: relids
           in: query
           required: false
@@ -194,14 +208,16 @@ paths:
           description: No addresses found
   /customermgmt/profile/addresses/{id}:
     put:
-      security:
-        - Bearer: []
       tags:
         - Customer Management
       summary: Updates specified customer address object 
       description: ''
       operationId: updatePostalAddress
       parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
         - name: id
           in: path
           required: true
@@ -223,13 +239,15 @@ paths:
           description: Address not found
   /customermgmt/profile/telephones:
     get:
-      security:
-        - Bearer: []
       tags:
         - Customer Management
       summary: Gets list of telephones associated with customer across select or all relationships
       operationId: getTelephoneList
       parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
         - name: relids
           in: query
           required: false
@@ -255,14 +273,16 @@ paths:
           description: No telephones found
   /customermgmt/profile/telephones/{id}:
     put:
-      security:
-        - Bearer: []
       tags:
         - Customer Management
       summary: Updates specified customer telephone object 
       description: ''
       operationId: updateTelephone
       parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
         - name: id
           in: path
           required: true
@@ -284,13 +304,15 @@ paths:
           description: Telephone not found
   /customermgmt/profile/emails:
     get:
-      security:
-        - Bearer: []
       tags:
         - Customer Management
       summary: Gets list of emails associated with customer across select or all relationships
       operationId: getEmailList
       parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
         - name: relids
           in: query
           required: false
@@ -316,14 +338,16 @@ paths:
           description: No emails found
   /customermgmt/profile/emails/{id}:
     put:
-      security:
-        - Bearer: []
       tags:
         - Customer Management
       summary: Updates specified customer email object 
       description: ''
       operationId: updateEmail
       parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
         - name: id
           in: path
           required: true
@@ -345,8 +369,11 @@ paths:
           description: Email not found
   /accountmgmt/retail/accounts:
     get:
-      security:
-        - Bearer: []
+      parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
       tags:
         - Account Management
       summary: Gets list of retail accounts linked to customer across all relationships
@@ -369,8 +396,6 @@ paths:
           description: Not Authorized
   '/accountmgmt/retail/accounts/{id}':
     get:
-      security:
-        - Bearer: []
       tags:
         - Account Management
       summary: Gets account details and balances for a given account
@@ -381,6 +406,10 @@ paths:
       produces:
         - application/json
       parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
         - name: id
           in: path
           required: true
@@ -394,8 +423,6 @@ paths:
           description: Not Authorized
   '/accountmgmt/retail/accounts/{id}/transactions':
     get:
-      security:
-        - Bearer: []
       tags:
         - Account Management
       summary: Gets transactions history for a given account
@@ -406,6 +433,10 @@ paths:
       produces:
         - application/json
       parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
         - name: id
           in: path
           required: true
@@ -432,14 +463,16 @@ paths:
           description: Not Authorized
   '/payments/transfer/ft':
     post:
-      security:
-        - Bearer: []
       tags:
         - Payments
       summary: Transfer funds from one linked account to another
       description: ''
       operationId: fundTransfer
       parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
         - name: transaction
           in: body
           schema:
@@ -449,7 +482,7 @@ paths:
           description: Transaction details retrieved successfully
           schema:
             items:
-              $ref: '#/definitions/Transactions'
+              $ref: '#/definitions/TxnResponse'
         '401':
           description: Not Authorized
 definitions:
@@ -733,19 +766,16 @@ definitions:
         description: Backend defined status of account, e.g. active, dormant, closed
       currentBalance:
         type: string
-        description: Most up-to-date balance, accounting for all transactions. It includes all
-        deposits that are on-hold and not yet available for withdrawal
+        description: Most up-to-date balance, accounting for all transactions. It includes all deposits that are on-hold and not yet available for withdrawal
       availableBalance:
         type: string
         description: Account balance that is available to withdraw or use 
       unpaidBalance:
         type: string
-        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to total
-        outstanding balance owed by customer 
+        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to total outstanding balance owed by customer 
       availableCredit:
         type: string
-        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to the amount
-        that customer can use before hiting account's credit line limit. 
+        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to the amount that customer can use before hiting account's credit line limit. 
   AccountDetail:
     type: object
     properties:
@@ -777,19 +807,22 @@ definitions:
         type: number
         description: ''
       nextPaymentDate:
-        type: date
+        type: string
+        format: date
         description: ''
       lastPaymentAmount:
         type: number
         description: ''
       lastPaymentDate:
-        type: date
+        type: string
+        format: date
         description: ''
       lastBillBalance:
         type: number
         description: ''
       lastBillDate:
-        type: date
+        type: string
+        format: date
         description: ''
       minimumDueAmount:
         type: number
@@ -810,12 +843,12 @@ definitions:
       transactionDate:
         type: string
         format: date-time
-        description: When transaction was initiated. TODO: insert example in right format
+        description: When transaction was initiated. TODO- insert example in right format
       transactionPostingDate:
         type: string
         format: date-time
         description: When transaction was posted or settled, usually only available for credit and
-          debit card transactions. TODO: insert example in right format
+          debit card transactions. TODO- insert example in right format
       description:
         type: string
         description: Description field of transaction, typically including payee details
