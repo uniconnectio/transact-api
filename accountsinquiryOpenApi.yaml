@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
-  version: "2.0.0"
-  title: "UniConnect Transact™ API"
+  version: "3.9"
+  title: "Testing API"
   description: |
     __This document describes a subset of UniConnect Transact&trade; Open Banking API collection.__
 
@@ -58,10 +58,11 @@ servers:
 paths:
   /security/oauth2/authorize:
     get:
-      summary: To authorize the user .
+      summary: To authorize the user.
       tags:
       - Authorization
-      operationId: authorization 
+      operationId: authorization
+      
       parameters:
         - name: client_id
           in: query
@@ -119,7 +120,10 @@ paths:
           required: true
           schema:
             type: string
-
+        - name: promt
+          schema: 
+            type: string
+          in: query
         - name: display
           in: query
           description: >
@@ -131,8 +135,7 @@ paths:
             default: page
       responses:
         '302':
-          description: 
-             To get the authorization code copy the link form the executed requestURL ,in the browser login with your credentials with scopes access & on successful result then copy the authorization code from response url.
+          description: successful or authentication response.
           content:
             text/html:
               schema:
@@ -205,7 +208,7 @@ paths:
                   description: authorized code
                   type: string
                 redirect_uri:
-                  description: will be http://localhost:3000
+                  description: will be http://localhost:3000          
                   type: string
                 refresh_token:
                   description: will differ based on the token or refreshtoken then remove
@@ -217,8 +220,7 @@ paths:
                 allowReserved: true
               code:
                 allowReserved: true
-              redirect_uri:
-                allowReserved: true
+              
               refresh_token:
                 allowReserved: true
               scope:
@@ -284,95 +286,95 @@ paths:
             Access-Control-Allow-Origin:
              schema:
               type: "string"
-  /security/oidc/userinfo:
-    get:
-      summary: To authorize the user.
-      tags:
-      - Customer Management
-      operationId: authorization
-      parameters:
-        - name: client_id
-          in: query
-          description: >
+  # /security/oidc/userinfo:
+  #   get:
+  #     summary: To authorize the user.
+  #     tags:
+  #     - Customer Details
+  #     operationId: authorization
+  #     parameters:
+  #       - name: client_id
+  #         in: query
+  #         description: >
 
-          required: true
-          schema:
-            type: string
-        - name: scope
-          in: query
-          description: >
-                  The space-separated identity claims to request from the end-user.
-                  Always include `openid` as a scope for compatibility with OIDC.
-          required: true
-          schema:
-            type: string
+  #         required: true
+  #         schema:
+  #           type: string
+  #       - name: scope
+  #         in: query
+  #         description: >
+  #                 The space-separated identity claims to request from the end-user.
+  #                 Always include `openid` as a scope for compatibility with OIDC.
+  #         required: true
+  #         schema:
+  #           type: string
 
-        - name: display
-          in: query
-          description: >
-            The authentication display mode, which can be one of `page`, `popup`
-            or `modal`. Defaults to `page`.
-          required: false
-          schema:
-            type: string
-            default: page
+  #       - name: display
+  #         in: query
+  #         description: >
+  #           The authentication display mode, which can be one of `page`, `popup`
+  #           or `modal`. Defaults to `page`.
+  #         required: false
+  #         schema:
+  #           type: string
+  #           default: page
 
-      responses:
-        '200':
-          description: Successful
-          headers:
-            Access-Control-Allow-Origin:
-             schema:
-               type: "string"
-          content:
-            application/json:
-              schema:
-                $ref: ''
+  #     responses:
+  #       '200':
+  #         description: Successful
+  #         headers:
+  #           Access-Control-Allow-Origin:
+  #           schema:
+  #             type: "string"
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: ''
 
-        '400':
-          description: |
-            Bad request
-          headers:
-            Access-Control-Allow-Origin:
-             schema:
-               type: "string"
-    options:
-      summary: CORS support
-      description: |
-        Enable CORS by returning correct headers
-      tags:
-        - CORS
-      x-amazon-apigateway-integration:
-        type: mock
-        requestTemplates:
-          application/json: |
-            {
-              "statusCode" : 200
-            }
-        responses:
-          "default":
-            statusCode: "200"
-            responseParameters:
-              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
-              method.response.header.Access-Control-Allow-Methods :
-                integration.response.header.Access-Control-Allow-Methods
-              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
-            responseTemplates:
-              application/json: |
-                {}
-      responses:
-        200:
-          description: Default response for CORS method
-          headers:
-            Access-Control-Allow-Headers:
-             schema:
-              type: "string"
-            Access-Control-Allow-Methods:
-             schema:
-              type: "string"
-            Access-Control-Allow-Origin:
-             schema:
-              type: "string"
+  #       '400':
+  #         description: |
+  #           Bad request
+  #         headers:
+  #           Access-Control-Allow-Origin:
+  #           schema:
+  #             type: "string"
+  #   options:
+  #     summary: CORS support
+  #     description: |
+  #       Enable CORS by returning correct headers
+  #     tags:
+  #       - CORS
+  #     x-amazon-apigateway-integration:
+  #       type: mock
+  #       requestTemplates:
+  #         application/json: |
+  #           {
+  #             "statusCode" : 200
+  #           }
+  #       responses:
+  #         "default":
+  #           statusCode: "200"
+  #           responseParameters:
+  #             method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+  #             method.response.header.Access-Control-Allow-Methods :
+  #               integration.response.header.Access-Control-Allow-Methods
+  #             method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+  #           responseTemplates:
+  #             application/json: |
+  #               {}
+  #     responses:
+  #       200:
+  #         description: Default response for CORS method
+  #         headers:
+  #           Access-Control-Allow-Headers:
+  #           schema:
+  #             type: "string"
+  #           Access-Control-Allow-Methods:
+  #           schema:
+  #             type: "string"
+  #           Access-Control-Allow-Origin:
+  #           schema:
+  #             type: "string"
   /security/oauth2/token/introspection:
     post:
       security:
@@ -507,7 +509,7 @@ paths:
             Access-Control-Allow-Origin:
              schema:
               type: "string"
-  /customermgmt/welcome/profile:
+  /customermgmt/welcome/profiles:
     get:
       security:
        - Bearer: []
@@ -516,11 +518,6 @@ paths:
       summary: Gets customer's basic profile data, such as name, dob and last login time.
       operationId: getWelcomeProfile
       parameters:
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
         - in: header
           name: client_id
           schema:
@@ -604,11 +601,6 @@ paths:
       operationId: getCustomerPrimaryProfile
       parameters:
         - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
-        - in: header
           name: client_id
           schema:
             type: string
@@ -684,11 +676,6 @@ paths:
       security:
         - Bearer: []
       parameters:
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
         - in: header
           name: client_id
           schema:
@@ -784,11 +771,6 @@ paths:
       operationId: getWelcomeMessageList
       parameters:
         - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
-        - in: header
           name: client_id
           schema:
             type: string
@@ -871,11 +853,6 @@ paths:
       summary: Gets list of addresses associated with customer across select or all relationships
       operationId: getPostalAddressList
       parameters:
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
         - in: header
           name: client_id
           schema:
@@ -969,11 +946,6 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/postalAddress'
       parameters:
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
         - in: header
           name: client_id
           schema:
@@ -1080,11 +1052,6 @@ paths:
       operationId: getTelephoneList
       parameters:
         - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
-        - in: header
           name: client_id
           schema:
             type: string
@@ -1174,11 +1141,6 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/telephone'
       parameters:
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
         - in: header
           name: client_id
           schema:
@@ -1286,11 +1248,6 @@ paths:
       operationId: getEmailList
       parameters:
         - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
-        - in: header
           name: client_id
           schema:
             type: string
@@ -1380,11 +1337,6 @@ paths:
       summary: Updates specified customer email object
       operationId: updateEmail
       parameters:
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
         - in: header
           name: client_id
           schema:
@@ -1489,11 +1441,6 @@ paths:
         - Bearer: []
       parameters:
         - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
-        - in: header
           name: client_id
           schema:
             type: string
@@ -1577,11 +1524,6 @@ paths:
       operationId: getRetailAccountDetails
       parameters:
         - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
-        - in: header
           name: client_id
           schema:
             type: string
@@ -1623,11 +1565,6 @@ paths:
       description: ''
       operationId: getAccountTransactionHistory
       parameters:
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
         - in: header
           name: client_id
           schema:
@@ -1758,11 +1695,6 @@ paths:
       description: ''
       operationId: fundTransfer
       parameters:
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
         - in: header
           name: client_id
           schema:
@@ -2478,5 +2410,5 @@ components:
       scheme: basic
     Bearer:
       type: apiKey
-      name: Authorization
+      name: Authorization 
       in: header
