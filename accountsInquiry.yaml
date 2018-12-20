@@ -205,7 +205,7 @@ paths:
             $ref: '#/definitions/IntrospectionResponse'
         '400':
           description: " "
-  /customermgmt/welcome/profile:
+  /customermgmt/welcome/profiles:
     get:
       security:
         - basicAuth: []
