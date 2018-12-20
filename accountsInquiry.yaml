@@ -207,19 +207,9 @@ paths:
           description: " "
   /customermgmt/welcome/profiles:
     get:
-      security:
-        - basicAuth: []
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
       tags:
@@ -289,19 +279,9 @@ paths:
               type: "string"
   /customermgmt/welcome/messages:
     get:
-      security:
-        - basicAuth: []
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
       tags:
@@ -369,19 +349,9 @@ paths:
               type: "string"
   /customermgmt/profile/relationships:
     get:
-      security:
-        - basicAuth: []
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
       tags:
@@ -451,19 +421,9 @@ paths:
               type: "string"
   /customermgmt/profile/profile:
     get:
-      security:
-        - basicAuth: []
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
       tags:
@@ -534,8 +494,6 @@ paths:
               type: "string"
   /customermgmt/profile/addresses:
     get:
-      security:
-        - basicAuth: []
       tags:
         - Customer Management
       summary: Gets list of addresses associated with customer across select or all relationships
@@ -543,14 +501,6 @@ paths:
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
         - name: relids
@@ -625,8 +575,6 @@ paths:
               type: "string"
   /customermgmt/profile/addresses/{id}:
     put:
-      security:
-        - basicAuth: []
       tags:
         - Customer Management
       summary: Updates specified customer address object
@@ -635,14 +583,6 @@ paths:
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
         - name: id
@@ -719,8 +659,6 @@ paths:
               type: "string"
   /customermgmt/profile/telephones:
     get:
-      security:
-        - basicAuth: []
       tags:
         - Customer Management
       summary: Gets list of telephones associated with customer across select or all relationships
@@ -728,14 +666,6 @@ paths:
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
         - name: relids
@@ -810,8 +740,6 @@ paths:
               type: "string"
   /customermgmt/profile/telephones/{id}:
     put:
-      security:
-        - basicAuth: []
       tags:
         - Customer Management
       summary: Updates specified customer telephone object
@@ -820,14 +748,6 @@ paths:
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
         - name: id
@@ -903,8 +823,6 @@ paths:
               type: "string"
   /customermgmt/profile/emails:
     get:
-      security:
-        - basicAuth: []
       tags:
         - Customer Management
       summary: Gets list of emails associated with customer across select or all relationships
@@ -912,14 +830,6 @@ paths:
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
         - name: relids
@@ -994,8 +904,6 @@ paths:
               type: "string"
   /customermgmt/profile/emails/{id}:
     put:
-      security:
-        - basicAuth: []
       tags:
         - Customer Management
       summary: Updates specified customer email object
@@ -1004,14 +912,6 @@ paths:
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
         - name: id
@@ -1088,19 +988,9 @@ paths:
               type: "string"
   /accountmgmt/retail/accounts:
     get:
-      security:
-        - basicAuth: []
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
       tags:
@@ -1169,8 +1059,6 @@ paths:
               type: "string"
   '/accountmgmt/retail/accounts/{id}':
     get:
-      security:
-        - basicAuth: []
       tags:
         - Account Management
       summary: Gets account details and balances for a given account
@@ -1183,14 +1071,6 @@ paths:
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
         - name: id
@@ -1255,8 +1135,6 @@ paths:
               type: "string"
   '/accountmgmt/retail/accounts/{id}/transactions':
     get:
-      security:
-        - basicAuth: []
       tags:
         - Account Management
       summary: Gets transactions history for a given account
@@ -1269,14 +1147,6 @@ paths:
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
         - name: id
@@ -1354,8 +1224,6 @@ paths:
               type: "string"
   '/payments/transfer/ft':
     post:
-      security:
-        - basicAuth: []
       tags:
         - Payments
       summary: Transfer funds from one linked account to another
@@ -1364,14 +1232,6 @@ paths:
       parameters:
         - in: header
           name: Authorization
-          type: string
-          required: true
-        - in: header
-          name: client_id
-          type: string
-          required: true
-        - in: header
-          name: client_secret
           type: string
           required: true
         - name: transaction
@@ -1788,10 +1648,10 @@ definitions:
         description: Account balance that is available to withdraw or use
       unpaidBalance:
         type: string
-        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to total outstanding balance owed by customer
+        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to total outstanding balance owed by customer 
       availableCredit:
         type: string
-        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to the amount that customer can use before hiting account's credit line limit.
+        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to the amount that customer can use before hiting account's credit line limit. 
   AccountDetail:
     type: object
     properties:
