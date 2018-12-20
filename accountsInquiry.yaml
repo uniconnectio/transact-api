@@ -1,76 +1,229 @@
 swagger: '2.0'
 info:
-  description: | 
+  description: |
     This document describes a subset of UniConnect Transact&trade; Open Banking API collection.
-    These APIs are implemented using REST-like conventions, uses HTTP/1.1 and JSON messages. 
+    These APIs are implemented using REST-like conventions, uses HTTP/1.1 and JSON messages.
 
     UniConnect Transact&trade; currently supports Retail (or Personal) and Small-Medium Enterprise
     (or Local Commercial) Banking accounts. The APIs are targeted for developers of consumer facing
     applications, and are not suitable for developing assisted-channel, branch, backoffice or sales
-    force applications. 
+    force applications.
 
     The diagram below gives a high-level view of how a typical application (App) will communicate with
     a Bank or FI (Backend) using UniConnect's Open Banking APIs (System). Keep this picture in mind as
-    you see references of frontend, system and backend throughout this document. 
+    you see references of frontend, system and backend throughout this document.
 
         +--------------+       +--------------+       +--------------+
         |     Apps     |       |  UniConnect  |       |   Bank/FIs   |
         |              <------->     APIs     <------->              |
         |  (Frontend)  |       |   (System)   |       |   (Backend)  |
         +--------------+       +--------------+       +--------------+
-
-
-  version: 2.0.1
+  version: 2.1.1
   title: UniConnect Transact™ API
   contact:
     email: api-support@uniconnect.io
 host: uniconnect-transact.azure-api.net
-basePath: /
 schemes:
   - https
+  - http
 securityDefinitions:
-  Bearer:
+  client_secret:
+    description: Session management by confidential clients.
+    type: oauth2
+    flow: password
+    tokenUrl: http://
+    scopes:
+      clients: Enable client management
+  bearer:
     type: apiKey
     name: Authorization
     in: header
+  oauth_code:
+    description: End-user authentication.
+    type: oauth2
+    flow: accessCode
+    authorizationUrl:  http://
+    tokenUrl: http://
+    scopes:
+      oidc: Enable OIDC flow
+      email: The user's email address
+      phone: The user's phone number
+      address: The user's postal address
+  basicAuth:
+    type: basic
+consumes:
+  - application/x-www-form-urlencoded
+  - application/json
+produces:
+  - application/x-www-form-urlencoded
+  - application/json
+  - application/problem+json
+  - text/html
 paths:
-  /security/authentication/access-token:
-    post:
+  /security/oauth2/authorize:
+    get:
+      summary: Authenticate a user
+      description: |
+        Start a session with  Connect and authenticate a user.
+        Example:
+        ```
+        GET https://example.com/authorize?client_id=<your-client-id>&response_type=code+id_token&scope=openid+email&redirect_uri=<your-redirect-uri>&state=123
+        ```
+
+        See also:
+          - [OAuth 2.0 Authorization Endpoint](http://tools.ietf.org/html/rfc6749#section-3.1)
+          - [OIDC Authentication request](http://openid.net/specs/openid-connect-core-1_0.html#AuthRequest)
+          - [OIDC Successful Authentication response](http://openid.net/specs/openid-connect-core-1_0.html#AuthResponse)
+          - [OIDC Error Authentication response](http://openid.net/specs/openid-connect-core-1_0.html#AuthError)
+
       tags:
-        - Security
-      summary: Validates customer credentials, creates a new server-side session and returns an 
-        Access-Token containing sessionid. 
-      description: This operation works similar to [OAuth2's Resource Owner Password Credentials
-        Grant](https://tools.ietf.org/html/rfc6749#section-4.3) flow.
-      operationId: authenticateUser
+        - Authentication
+      operationId: authorize
+      parameters:
+        - name: client_id
+          in: query
+          type: string
+          description: >
+            A client ID obtained
+          required: true
+        - name: response_type
+          in: query
+          type: string
+          description: >
+            The OIDC response type to use for this authentication flow. Valid choices are `code`, `id_token`, `token`, `token id_token`, `code id_token` `code token` and `code token id_token`, but a client can be configured with a more restricted set.
+          required: true
+        - name: scope
+          in: query
+          type: string
+          description: >
+            The space-separated identity claims to request from the end-user. Always include `openid` as a scope for compatibility with OIDC.
+          required: true
+        - name: redirect_uri
+          in: query
+          type: string
+          description: >
+            The location to redirect to after (un)successful authentication. See OIDC for the parameters passed in the query string (`response_mode=query`) or as fragments (`response_mode=fragment`). Unless the client is in test-mode this must be one of the registered redirect URLs.
+          required: true
+        - name: state
+          in: query
+          type: string
+          description: >
+            An opaque string that will be passed back to the redirect URL and therefore can be used to communicate client side state and prevent CSRF attacks.
+          required: true
+        - name: nonce
+          in: query
+          type: string
+          description: >
+            An nonce provided by the client , that will be included in any ID Token generated for this session. Clients should use the nonce to mitigate replay attacks.
+          required: false
+        - name: promt
+          in: query
+          type: string
+          required: false
+        - name: display
+          in: query
+          type: string
+          description: >
+            The authentication display mode, which can be one of `page`, `popup` or `modal`. Defaults to `page`.
+          required: false
+          default: page
+      produces:
+        - text/html
+      responses:
+        302:
+          description: >
+            A successful or erroneous authentication response.
+        303:
+          description: >
+            *Sign in , page, popup or modal.
+      externalDocs:
+        description: OpenID Authorization Endpoint
+        url: http://openid.net/specs/openid-connect-core-1_0.html#AuthorizationEndpoint
+  /security/oauth2/token:
+    post:
+      security:
+        - basicAuth: []
+      summary: Obtain an ID Token
+      description: |
+        Exchange en authorization code for an ID Token or Access Token.
+
+        This endpoint supports both `client_secret_post` and `client_secret_basic` authenticatino methods, as specified by the client's `token_endpoint_auth_method`.
+
+        See also:
+          - [OIDC Token Endpoint](http://openid.net/specs/openid-connect-core-1_0.html#TokenRequest)
+          - [OIDC Successful Token response](http://openid.net/specs/openid-connect-core-1_0.html#TokenResponse)
+          - [OIDC Token Error response](http://openid.net/specs/openid-connect-core-1_0.html#TokenError)
+
+      tags:
+        - Authentication
+      operationId: token
       consumes:
-        - application/json
+        - application/x-www-form-urlencoded
+      parameters:
+        - in: formData
+          name: grant_type
+          type: string
+        - in : formData
+          name: redirect_uri
+          type: string
+        - in : formData
+          name: code
+          type : string
+
       produces:
         - application/json
+      responses:
+        200:
+          $ref: '#/definitions/Token'
+        400:
+          $ref: '#/definitions/OAuth2Error'
+        401:
+          $ref: '#/definitions/OAuth2Error'
+      externalDocs:
+        description: OpenID Token Endpoint
+        url: http://openid.net/specs/openid-connect-core-1_0.html#TokenEndpoint
+  /security/oauth2/token/introspection:
+    post:
+      security:
+        - basicAuth: []
+      tags:
+      - Authentication
+      operationId: introspection
+      summary:  token introspection
       parameters:
         - in: body
-          name: Credentials
-          description: Email and Password required
+          name: body
           required: true
           schema:
-            $ref: '#/definitions/Credentials'
+            $ref: '#/definitions/TokenIntrospection'
       responses:
-        '201':
-          description: Successfully logged in.
+        '200':
+          description: |
+            A successful response.
           schema:
-            $ref: '#/definitions/AccessToken'
-        '401':
-          description: Invalid credentials.
-  /customermgmt/welcome/profile:
+            $ref: '#/definitions/IntrospectionResponse'
+        '400':
+          description: " "
+  /customermgmt/welcome/profiles:
     get:
+      security:
+        - bearer: []
       parameters:
         - in: header
           name: Authorization
           type: string
           required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
+          type: string
+          required: true
       tags:
         - Customer Management
-      summary: Gets customer's basic profile data, such as name, dob and last login time. 
+      summary: Gets customer's basic profile data, such as name, dob and last login time.
       description: ''
       operationId: getWelcomeProfile
       consumes:
@@ -80,23 +233,80 @@ paths:
       responses:
         '200':
           description: Profile received successfully.
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
           schema:
             $ref: '#/definitions/WelcomeProfile'
         '401':
           description: Not Authorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         '404':
           description: Customer profile not found
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
   /customermgmt/welcome/messages:
     get:
+      security:
+        - bearer: []
       parameters:
         - in: header
           name: Authorization
           type: string
           required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
+          type: string
+          required: true
       tags:
         - Customer Management
       summary: Gets list of welcome messages and notices, such as new feature announcement or system
-        maintenance notice  
+        maintenance notice
       description: ''
       operationId: getWelcomeMessageList
       consumes:
@@ -106,30 +316,84 @@ paths:
       responses:
         '200':
           description: Messages Retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
           schema:
             type: array
             items:
               $ref: '#/definitions/WelcomeMessage'
         '401':
           description: Not Authorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
   /customermgmt/profile/relationships:
     get:
+      security:
+        - bearer: []
       parameters:
         - in: header
           name: Authorization
           type: string
           required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
+          type: string
+          required: true
       tags:
         - Customer Management
-      summary: Gets list of relationships associated with customer   
-      description: > 
+      summary: Gets list of relationships associated with customer
+      description: >
         A relationship typically groups one or more accounts together, and may be shared by multiple
         customers. E.g. A joint checking account creates a relationship involving one checking
         account and two (or more) customers. Similarly, a customer could have two relationships each
         containing a pair of checking and savings account. In general, contact details such as
-        postal address, phone numbers and email are maintained at a relationship level. Similarly, 
-        statements are also generated at relationship level. Some backends may not implement a 
-        concept of relationships, in which case this operation will return a 404 response code. 
+        postal address, phone numbers and email are maintained at a relationship level. Similarly,
+        statements are also generated at relationship level. Some backends may not implement a
+        concept of relationships, in which case this operation will return a 404 response code.
       operationId: getCustomerRelationships
       consumes:
         - application/json
@@ -137,27 +401,75 @@ paths:
         - application/json
       responses:
         '200':
-          description: Relationship list retrieved successfully 
+          description: Relationship list retrieved successfully
           schema:
             type: array
-            items: 
+            items:
               $ref: '#/definitions/CustomerRelationship'
         '401':
           description: Not Authorized
         '404':
           description: No relationships found
-  /customermgmt/profile/profile: 
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
+  /customermgmt/profile/profile:
     get:
+      security:
+        - bearer: []
       parameters:
         - in: header
           name: Authorization
           type: string
           required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
+          type: string
+          required: true
       tags:
         - Customer Management
       summary: Gets customer's primary or default profile
-      description: Customer profile contains data describing the customer, and may includes 
-        biographical data, income data, employer details and contact information. 
+      description: Customer profile contains data describing the customer, and may includes
+        biographical data, income data, employer details and contact information.
       operationId: getCustomerPrimaryProfile
       consumes:
         - application/json
@@ -165,15 +477,64 @@ paths:
         - application/json
       responses:
         '200':
-          description: Profile received successfully.
+          description: Profile received successfully,
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
           schema:
             $ref: '#/definitions/CustomerProfile'
         '401':
           description: Not Authorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         '404':
           description: User profile not found
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
   /customermgmt/profile/addresses:
     get:
+      security:
+        - bearer: []
       tags:
         - Customer Management
       summary: Gets list of addresses associated with customer across select or all relationships
@@ -183,13 +544,21 @@ paths:
           name: Authorization
           type: string
           required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
+          type: string
+          required: true
         - name: relids
           in: query
           required: false
           description: Optional list of relationship ids to filter output, eg. ["123456", "345678"].
-            If not specified, then addresses across all relationships will be returned. 
+            If not specified, then addresses across all relationships will be returned.
           type: array
-          items: 
+          items:
             type: string
       consumes:
         - application/json
@@ -202,20 +571,77 @@ paths:
             type: array
             items:
               $ref: '#/definitions/PostalAddress'
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         '401':
           description: Not Authorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         '404':
           description: No addresses found
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
   /customermgmt/profile/addresses/{id}:
     put:
+      security:
+        - bearer: []
       tags:
         - Customer Management
-      summary: Updates specified customer address object 
+      summary: Updates specified customer address object
       description: ''
       operationId: updatePostalAddress
       parameters:
         - in: header
           name: Authorization
+          type: string
+          required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
           type: string
           required: true
         - name: id
@@ -233,12 +659,67 @@ paths:
           description: Address updated successfully
           schema:
             $ref: '#/definitions/AddressUpdateResponse'
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         '401':
           description: Not Authorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         '404':
           description: Address not found
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+       - CORS
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
   /customermgmt/profile/telephones:
     get:
+      security:
+        - bearer: []
       tags:
         - Customer Management
       summary: Gets list of telephones associated with customer across select or all relationships
@@ -248,13 +729,21 @@ paths:
           name: Authorization
           type: string
           required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
+          type: string
+          required: true
         - name: relids
           in: query
           required: false
           description: Optional list of relationship ids to filter output, eg. ["123456", "345678"].
-            If not specified, then telephones across all relationships will be returned. 
+            If not specified, then telephones across all relationships will be returned.
           type: array
-          items: 
+          items:
             type: string
       consumes:
         - application/json
@@ -263,24 +752,81 @@ paths:
       responses:
         '200':
           description: Telephone list retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
           schema:
             type: array
             items:
               $ref: '#/definitions/Telephone'
         '401':
           description: Not Authorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         '404':
           description: No telephones found
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
   /customermgmt/profile/telephones/{id}:
     put:
+      security:
+        - bearer: []
       tags:
         - Customer Management
-      summary: Updates specified customer telephone object 
+      summary: Updates specified customer telephone object
       description: ''
       operationId: updateTelephone
       parameters:
         - in: header
           name: Authorization
+          type: string
+          required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
           type: string
           required: true
         - name: id
@@ -296,14 +842,68 @@ paths:
       responses:
         '200':
           description: Telephone updated successfully
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
           schema:
             $ref: '#/definitions/TelephoneUpdateResponse'
         '401':
           description: Not Authorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         '404':
           description: Telephone not found
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
   /customermgmt/profile/emails:
     get:
+      security:
+        - bearer: []
       tags:
         - Customer Management
       summary: Gets list of emails associated with customer across select or all relationships
@@ -313,13 +913,21 @@ paths:
           name: Authorization
           type: string
           required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
+          type: string
+          required: true
         - name: relids
           in: query
           required: false
           description: Optional list of relationship ids to filter output, eg. ["123456", "345678"].
-            If not specified, then emails across all relationships will be returned. 
+            If not specified, then emails across all relationships will be returned.
           type: array
-          items: 
+          items:
             type: string
       consumes:
         - application/json
@@ -332,20 +940,77 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Email'
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         '401':
           description: Not Authorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         '404':
           description: No emails found
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
   /customermgmt/profile/emails/{id}:
     put:
+      security:
+        - bearer: []
       tags:
         - Customer Management
-      summary: Updates specified customer email object 
+      summary: Updates specified customer email object
       description: ''
       operationId: updateEmail
       parameters:
         - in: header
           name: Authorization
+          type: string
+          required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
           type: string
           required: true
         - name: id
@@ -363,23 +1028,86 @@ paths:
           description: Email updated successfully
           schema:
             $ref: '#/definitions/EmailUpdateResponse'
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         '401':
           description: Not Authorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         '404':
           description: Email not found
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
   /accountmgmt/retail/accounts:
     get:
+      security:
+        - bearer: []
       parameters:
         - in: header
           name: Authorization
+          type: string
+          required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
           type: string
           required: true
       tags:
         - Account Management
       summary: Gets list of retail accounts linked to customer across all relationships
       description: Retail accounts are banking products offered to consumers. These include checking
-        and savings accounts, term deposits, personal loans, mortgage, credit line, and credit cards. 
-        It is distinct from commercial bank accounts, investment accounts and capital markets.  
+        and savings accounts, term deposits, personal loans, mortgage, credit line, and credit cards.
+        It is distinct from commercial bank accounts, investment accounts and capital markets.
       operationId: getRetailAccountList
       consumes:
         - application/json
@@ -388,14 +1116,60 @@ paths:
       responses:
         '200':
           description: Account List retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
           schema:
             type: array
             items:
               $ref: '#/definitions/RetailAccount'
         '401':
           description: Not Authorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
   '/accountmgmt/retail/accounts/{id}':
     get:
+      security:
+        - bearer: []
       tags:
         - Account Management
       summary: Gets account details and balances for a given account
@@ -410,6 +1184,14 @@ paths:
           name: Authorization
           type: string
           required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
+          type: string
+          required: true
         - name: id
           in: path
           required: true
@@ -417,12 +1199,63 @@ paths:
       responses:
         '200':
           description: Account details retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
           schema:
             $ref: '#/definitions/AccountDetail'
         '401':
           description: Not Authorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
   '/accountmgmt/retail/accounts/{id}/transactions':
     get:
+      security:
+        - bearer: []
       tags:
         - Account Management
       summary: Gets transactions history for a given account
@@ -437,11 +1270,19 @@ paths:
           name: Authorization
           type: string
           required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
+          type: string
+          required: true
         - name: id
           in: path
           required: true
           type: string
-          description: ID referencing the requested account 
+          description: ID referencing the requested account
         - name: fromDate
           in: query
           type: string
@@ -450,19 +1291,70 @@ paths:
         - name: toDate
           in: query
           type: string
-          description: Transaction history end date 
+          description: Transaction history end date
           format: date
       responses:
         '200':
           description: Transaction details retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
           schema:
             type: array
             items:
               $ref: '#/definitions/Transaction'
         '401':
           description: Not Authorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
   '/payments/transfer/ft':
     post:
+      security:
+        - bearer: []
       tags:
         - Payments
       summary: Transfer funds from one linked account to another
@@ -473,6 +1365,14 @@ paths:
           name: Authorization
           type: string
           required: true
+        - in: header
+          name: client_id
+          type: string
+          required: true
+        - in: header
+          name: client_secret
+          type: string
+          required: true
         - name: transaction
           in: body
           schema:
@@ -480,28 +1380,110 @@ paths:
       responses:
         '200':
           description: Transaction details retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
           schema:
             items:
               $ref: '#/definitions/TxnResponse'
         '401':
           description: Not Authorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers : integration.response.header.Access-Control-Allow-Headers
+              method.response.header.Access-Control-Allow-Methods :
+                integration.response.header.Access-Control-Allow-Methods
+              method.response.header.Access-Control-Allow-Origin : integration.response.header.Access-Control-Allow-Origin
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
 definitions:
-  Error: 
+  Error:
     type: object
     description: Generic error object
-    properties: 
-      code: 
+    properties:
+      code:
         type: string
         description: Error code returned by backend or system
-      message: 
+      message:
         type: string
         description: Error message returned by backend or system
-      moreInfo: 
+      moreInfo:
         type: object
         description: Error object returned by backend or system, if any
+  Token:
+    description: >
+      Successful token response
+    required:
+      - token_type
+    properties:
+      token_type:
+        type: string
+      access_token:
+        description: The access token issued by the authorization server.
+        type: string
+      id_token:
+        description: ID Token value associated with the authenticated session.
+        type: string
+      refresh_token:
+        description: The refresh token issued to the client, if any.
+        type: string
+      expires_in:
+        description: The lifetime in seconds of the access token.
+        type: integer
+        format: int32
+      expires_at:
+        description: The time the access token will expire in seconds since epoch.
+        type: integer
+        format: int64
+      scope:
+        description: The scope of the granted tokens.
+        type: string
+  OAuth2Error:
+    description: >
+      Error Response defined as in Section 5.2 of OAuth 2.0 [RFC6749].
+    required:
+    - error
+    properties:
+      error:
+        type: string
+      error_description:
+        type: string
   Credentials:
     type: object
-    required: 
+    required:
     - email
     - password
     - strategy
@@ -552,40 +1534,40 @@ definitions:
         type: string
       customerType:
         type: string
-        description: Backend assigned customer segment or class type, e.g. basic, premier, gold 
+        description: Backend assigned customer segment or class type, e.g. basic, premier, gold
   CustomerRelationship:
     type: object
     description: Customer Relationship object
-    properties: 
-      id: 
+    properties:
+      id:
         type: string
         description: System assigned unique relationship id, e.g. uuid
-      relNo: 
+      relNo:
         type: string
         description: Backend assigned relationship account number
-      type: 
+      type:
         type: string
         description: Backend assigned relationship type, e.g. Joint, JWTROS, household
-      description: 
+      description:
         type: string
         description: Backend assigned relationship name/description, e.g. Basic Banking Package
-      default: 
+      default:
         type: boolean
-        description: Indicates if this relationship is default or primary for customer 
+        description: Indicates if this relationship is default or primary for customer
   CustomerProfile:
     type: object
     properties:
       customerType:
         type: string
-        description: Backend assigned customer segment or class type, e.g. basic, premier, gold 
+        description: Backend assigned customer segment or class type, e.g. basic, premier, gold
       biographics:
         description: Customer's biographical data, like name, dob, marital status, etc.
         type: object
         properties:
           firstName:
             type: string
-          middleName: 
-            type: string 
+          middleName:
+            type: string
           lastName:
             type: string
           prefix:
@@ -638,7 +1620,7 @@ definitions:
               type: string
             service:
               type: string
-              description: Social media service name, e.g. Facebook, Twitter, Wechat, Snapchat 
+              description: Social media service name, e.g. Facebook, Twitter, Wechat, Snapchat
             accountId:
               type: string
             preferred:
@@ -689,33 +1671,66 @@ definitions:
         description: Customer financial related information.
         items:
           type: string
-  AddressUpdateResponse: 
+  AddressUpdateResponse:
     type: object
     description: Response entity of updatePostalAddress operation
-    allOf: 
+    allOf:
     - $ref: '#/definitions/TxnResponse'
     - type: object
-      properties: 
-        txnResponse: 
-          $ref: '#/definitions/PostalAddress' 
-  TelephoneUpdateResponse: 
+      properties:
+        txnResponse:
+          $ref: '#/definitions/PostalAddress'
+  TelephoneUpdateResponse:
     type: object
     description: Response entity of updateTelephone operation
-    allOf: 
+    allOf:
     - $ref: '#/definitions/TxnResponse'
     - type: object
-      properties: 
-        txnResponse: 
-          $ref: '#/definitions/Telephone' 
-  EmailUpdateResponse: 
+      properties:
+        txnResponse:
+          $ref: '#/definitions/Telephone'
+  TokenIntrospection:
+      properties:
+        token:
+          type: string
+        token_type:
+          type: string
+        revoke:
+          type: boolean
+      required:
+        - token
+        - token_type
+        - revoke
+  IntrospectionResponse:
+      type: object
+      properties:
+        active:
+          type: string
+        sub:
+          type: string
+        client_id:
+          type: string
+        exp:
+          type: integer
+        iat:
+          type: integer
+        sid:
+          type: string
+        iss:
+          type: string
+        jti:
+          type: string
+        scope:
+          type: string
+  EmailUpdateResponse:
     type: object
     description: Response entity of updateEmail operation
-    allOf: 
+    allOf:
     - $ref: '#/definitions/TxnResponse'
     - type: object
-      properties: 
-        txnResponse: 
-          $ref: '#/definitions/Email' 
+      properties:
+        txnResponse:
+          $ref: '#/definitions/Email'
   WelcomeMessage:
     properties:
       title:
@@ -737,13 +1752,13 @@ definitions:
         description: Account number masked based on system defined rules
       category:
         type: string
-        description: | 
-          Primary category or type of this account. Possible values are: 
+        description: |
+          Primary category or type of this account. Possible values are:
           `deposit`, `loan`, `lineOfCredit`, `creditCard`, `investment`
       subCategory:
         type: string
-        description: | 
-          Sub-category or sub-type of this account. Possible values are: 
+        description: |
+          Sub-category or sub-type of this account. Possible values are:
           `deposit` - checking, savings, timeDeposit, moneyMarket
           `loan` - homeLoan, personalLoan, businessLoan
           `lineOfCredit` - unsecured, secured, margin
@@ -769,13 +1784,13 @@ definitions:
         description: Most up-to-date balance, accounting for all transactions. It includes all deposits that are on-hold and not yet available for withdrawal
       availableBalance:
         type: string
-        description: Account balance that is available to withdraw or use 
+        description: Account balance that is available to withdraw or use
       unpaidBalance:
         type: string
-        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to total outstanding balance owed by customer 
+        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to total outstanding balance owed by customer
       availableCredit:
         type: string
-        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to the amount that customer can use before hiting account's credit line limit. 
+        description: Returned for loan, lineOfCredit and creditCard accounts. Refers to the amount that customer can use before hiting account's credit line limit.
   AccountDetail:
     type: object
     properties:
@@ -836,10 +1851,10 @@ definitions:
       id:
         type: string
         description: System returned unique identifier for a transaction object
-      referenceNo: 
+      referenceNo:
         type: string
         description: Backend returned transaction reference number. Where application, it maps to
-          ISO8583 transaction reference number, which is often an alphanumeric string. 
+          ISO8583 transaction reference number, which is often an alphanumeric string.
       transactionDate:
         type: string
         format: date-time
@@ -857,18 +1872,18 @@ definitions:
         description: ISO 4217 currency code, could be either 3-letters or 3-numbers, e.g. USD or 840
       debitAmount:
         type: number
-        description: Amount taken away from the account, such as a charge, payment or transfer out. 
+        description: Amount taken away from the account, such as a charge, payment or transfer out.
       creditAmount:
         type: number
         description: Amount added to the account, such as a reversal, incoming transfer
-      balanceAmount: 
+      balanceAmount:
         type: number
-        description: Balance on account after factoring this transaction, or end-of-day account balance 
-      mcc: 
+        description: Balance on account after factoring this transaction, or end-of-day account balance
+      mcc:
         type: string
         description: Merchant Category Code, generally available for credit and debit card
           transactions. Where applicable, it maps to ISO8583 MCC field. Values and format are
-          specific to each payment network such as Visa, MasterCard, Maestro, Interlink, etc. 
+          specific to each payment network such as Visa, MasterCard, Maestro, Interlink, etc.
   FundTransfer:
     type: object
     description: Fund Transfer related information.
@@ -896,7 +1911,7 @@ definitions:
       type:
         type: string
         description: Business defined classification for addresses, e.g. mailing, residential
-      label: 
+      label:
         type: string
         description: Customer defined optional label for easy reference, e.g. myhome
       line1:
@@ -917,7 +1932,7 @@ definitions:
         type: string
       country:
         type: string
-  Telephone: 
+  Telephone:
     type: object
     description: Based on https://schema.org/telephone
     properties:
@@ -930,7 +1945,7 @@ definitions:
       type:
         type: string
         description: Business defined classification for telephone, e.g. personal, work
-      label: 
+      label:
         type: string
         description: User defined optional label for easy reference, e.g. myhomeph
       number:
@@ -947,7 +1962,7 @@ definitions:
         description: Optional extension number, e.g. 100
       preferred:
         type: boolean
-  Email: 
+  Email:
     type: object
     description: Based on https://schema.org/email
     properties:
@@ -960,7 +1975,7 @@ definitions:
       type:
         type: string
         description: Business defined classification for emails, e.g. personal, work
-      label: 
+      label:
         type: string
         description: User defined optional label for easy reference, e.g. gmailid
       email:
@@ -968,19 +1983,19 @@ definitions:
         description: E-Mail address, e.g. foo@example.com
       preferred:
         type: boolean
-  TxnResponse: 
+  TxnResponse:
     type: object
-    description: Generic schema representing response of a transaction process 
-    properties: 
+    description: Generic schema representing response of a transaction process
+    properties:
       txnId:
         type: string
         format: uuid
         description: UUID to identify this transaction within the system
-      txnRef: 
+      txnRef:
         type: string
-        description: Backend or system assigned transaction reference number, for customer 
+        description: Backend or system assigned transaction reference number, for customer
           communication purposes
-      txnStatus: 
+      txnStatus:
         type: string
-        description: Backend transaction processing status after acceptance, e.g. accepted, 
+        description: Backend transaction processing status after acceptance, e.g. accepted,
           pending, queued
